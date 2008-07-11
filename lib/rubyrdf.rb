@@ -7,3 +7,4 @@ end
 
 require 'rdf/blank_node'
 require 'rdf/uri_node'
+require 'rdf/plain_literal_node'
