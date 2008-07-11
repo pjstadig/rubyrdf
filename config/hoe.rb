@@ -8,7 +8,7 @@ RUBYFORGE_PROJECT = 'rubyrdf' # The unix name for your project
 HOMEPATH = "http://github.com/pjstadig/rubyrdf/wikis"
 DOWNLOAD_PATH = "http://github.com/pjstadig/rubyrdf/tarball/master"
 EXTRA_DEPENDENCIES = [
-#  ['activesupport', '>= 1.3.1']
+  ['activesupport', '>= 1.3.1']
 ]    # An array of rubygem dependencies [name, version]
 
 @config_file = "~/.rubyforge/user-config.yml"

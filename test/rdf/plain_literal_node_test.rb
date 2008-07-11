@@ -5,6 +5,10 @@ class RDF::PlainLiteralNodeTest < Test::Unit::TestCase
     assert_equal 'test', RDF::PlainLiteralNode.new('test').lexical_form
   end
   
+  def test_should_normalize_lexical_form
+    assert_equal [0x03a9].pack('U'), RDF::PlainLiteralNode.new([0x2126].pack('U')).lexical_form
+  end
+  
   def test_should_initialize_language_tag
     assert_nil RDF::PlainLiteralNode.new('test').language_tag
     assert_equal 'en', RDF::PlainLiteralNode.new('test', 'en').language_tag

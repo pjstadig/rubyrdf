@@ -1,8 +1,9 @@
 module RDF
-  class BlankNode
+  class BlankNode < Node
     attr_reader :name
     
     def initialize(name = nil)
+      super()
       @name = name || genname
     end
     

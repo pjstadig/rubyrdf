@@ -5,6 +5,10 @@ class RDF::URINodeTest < Test::Unit::TestCase
     assert_equal 'http://stadig.name/', RDF::URINode.new('http://stadig.name/').uri
   end
   
+  def test_should_normalize_uri
+    assert_equal [0x03a9].pack('U'), RDF::URINode.new([0x2126].pack('U')).uri
+  end
+  
   def test_should_export_to_ntriples_format
     assert_equal '<http://stadig.name/>', RDF::URINode.new('http://stadig.name/').to_ntriples
     assert_equal '<http://stadig.name/>', RDF::URINode.new('http://stadig.name/').to_s

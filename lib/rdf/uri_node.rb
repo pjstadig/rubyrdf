@@ -1,13 +1,10 @@
-require 'rdf/ntriples_helper'
-
 module RDF
-  class URINode
-    include NTriplesHelper
-    
+  class URINode < Node
     attr_reader :uri
     
     def initialize(uri)
-      @uri = uri
+      super()
+      @uri = uri.chars.normalize(:c).to_s
     end
     
     def hash

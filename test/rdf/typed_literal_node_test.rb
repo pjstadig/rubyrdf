@@ -7,6 +7,17 @@ class RDF::TypedLiteralNodeTest < Test::Unit::TestCase
     assert_equal 'http://stadig.name/', node.datatype_uri
   end
   
+  def test_should_initialize_datatype_uri
+    assert_equal 'http://stadig.name/',
+                  RDF::TypedLiteralNode.new('test', RDF::URINode.new('http://stadig.name/')).datatype_uri
+  end
+  
+  def test_should_normalize_lexical_form_and_datatype_uri
+    node = RDF::TypedLiteralNode.new([0x2126].pack('U'), [0x2126].pack('U'))
+    assert_equal [0x03a9].pack('U'), node.lexical_form
+    assert_equal [0x03a9].pack('U'), node.datatype_uri
+  end
+  
   def test_should_be_eq
     assert RDF::TypedLiteralNode.new('test', 'http://stadig.name/') ==
            RDF::TypedLiteralNode.new('test', 'http://stadig.name/')

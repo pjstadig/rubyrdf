@@ -1,13 +1,10 @@
-require 'rdf/ntriples_helper'
-
 module RDF
-  class PlainLiteralNode
-    include NTriplesHelper
-    
+  class PlainLiteralNode < Node
     attr_reader :lexical_form, :language_tag
     
     def initialize(lexical_form, language_tag = nil)
-      @lexical_form = lexical_form
+      super()
+      @lexical_form = lexical_form.chars.normalize(:c).to_s
       @language_tag = language_tag
     end
     

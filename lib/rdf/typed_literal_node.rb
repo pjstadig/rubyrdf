@@ -1,14 +1,17 @@
-require 'rdf/ntriples_helper'
-
 module RDF
-  class TypedLiteralNode
-    include NTriplesHelper
-    
+  class TypedLiteralNode < Node
     attr_reader :lexical_form, :datatype_uri
     
     def initialize(lexical_form, datatype_uri)
-      @lexical_form = lexical_form
-      @datatype_uri = datatype_uri
+      super()
+      @lexical_form = lexical_form.chars.normalize(:c).to_s
+      if datatype_uri.uri_node?
+        @datatype_uri = datatype_uri.uri
+      else
+        @datatype_uri = datatype_uri
+      end
+      
+      @datatype_uri = @datatype_uri.chars.normalize(:c).to_s
     end
     
     def hash
