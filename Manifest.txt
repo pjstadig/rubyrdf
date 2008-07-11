@@ -1,11 +1,14 @@
 History.txt
 License.txt
+Manifest.txt
+PostInstall.txt
 README.txt
+Rakefile
 TODO.txt
 lib/rdf.rb
 lib/rdf/blank_node.rb
 lib/rdf/error.rb
-lib/rdf/ntriples_helper.rb
+lib/rdf/node.rb
 lib/rdf/plain_literal_node.rb
 lib/rdf/sesame/base.rb
 lib/rdf/sparql_result.rb
