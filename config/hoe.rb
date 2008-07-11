@@ -1,4 +1,4 @@
-require 'rubyrdf/version'
+require 'rdf/version'
 
 AUTHOR = 'Paul Stadig'  # can also be an array of Authors
 EMAIL = "paul@stadig.name"
@@ -34,7 +34,7 @@ end
 REV = nil
 # UNCOMMENT IF REQUIRED:
 # REV = YAML.load(`svn info`)['Revision']
-VERS = Rubyrdf::VERSION::STRING + (REV ? ".#{REV}" : "")
+VERS = RDF::VERSION::STRING + (REV ? ".#{REV}" : "")
 RDOC_OPTS = ['--quiet', '--title', 'rubyrdf documentation',
     "--opname", "index.html",
     "--line-numbers",
@@ -56,7 +56,7 @@ $hoe = Hoe.new(GEM_NAME, VERS) do |p|
   p.summary = DESCRIPTION
   p.url = HOMEPATH
   p.rubyforge_name = RUBYFORGE_PROJECT if RUBYFORGE_PROJECT
-  p.test_globs = ["test/**/test_*.rb"]
+  p.test_globs = ["test/**/*_test.rb"]
   p.clean_globs |= ['**/.*.sw?', '*.gem', '.config', '**/.DS_Store']  #An array of file patterns to delete on clean.
 
   # == Optional
