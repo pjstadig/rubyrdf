@@ -4,3 +4,4 @@ $:.unshift(File.dirname(__FILE__)) unless
 module RDF
 end
 
+require 'rdf/blank_node'
