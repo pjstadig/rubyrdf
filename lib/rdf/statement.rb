@@ -44,5 +44,19 @@ module RDF
       [@subject, @predicate, @object].map!{|n| n.to_ntriples}.join(' ') + " ."
     end
     alias_method :to_s, :to_ntriples
+    
+    def to_statement
+      self
+    end
+  end
+end
+
+class Array
+  def to_statement
+    if self.size == 1
+      self[0].to_statement
+    else
+      RDF::Statement.new(*self)
+    end
   end
 end

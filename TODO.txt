@@ -5,7 +5,6 @@ typed literal node validation
 plain literal node unicode normalization
 typed literal node unicode normalization
 uri node unicode normalization
-sesame graph
 to_node
 to_f
 to_i

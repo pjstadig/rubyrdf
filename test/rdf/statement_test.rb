@@ -73,4 +73,11 @@ class RDF::StatementTest < Test::Unit::TestCase
     assert_equal '<http://example.org/sub> <http://example.org/pred> <http://example.org/obj> .',
                  RDF::Statement.new(@ex::sub, @ex::pred, @ex::obj).to_s
   end
+  
+  def test_should_be_statement
+    stmt = RDF::Statement.new(@ex::sub, @ex::pred, @ex::obj)
+    assert_same stmt, stmt.to_statement
+    assert_same stmt, [stmt].to_statement
+    assert_equal stmt, [@ex::sub, @ex::pred, @ex::obj].to_statement
+  end
 end
