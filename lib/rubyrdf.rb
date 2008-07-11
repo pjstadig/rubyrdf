@@ -5,3 +5,4 @@ module RDF
 end
 
 require 'rdf/blank_node'
+require 'rdf/uri_node'
