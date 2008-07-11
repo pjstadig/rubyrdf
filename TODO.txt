@@ -1,4 +1,3 @@
-typed literal
 triple
 sesame graph
 to_node

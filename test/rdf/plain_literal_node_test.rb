@@ -11,8 +11,10 @@ class RDF::PlainLiteralNodeTest < Test::Unit::TestCase
   end
   
   def test_should_be_eq
-    node = RDF::PlainLiteralNode.new('test', 'en')
-    assert node == RDF::PlainLiteralNode.new('test', 'en')
+    assert RDF::PlainLiteralNode.new('test', 'en') ==
+           RDF::PlainLiteralNode.new('test', 'en')
+    assert RDF::PlainLiteralNode.new('test') ==
+           RDF::PlainLiteralNode.new('test')
   end
   
   def test_should_not_be_eq
