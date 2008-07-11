@@ -25,5 +25,9 @@ module RDF
       "<#{escape_ntriples(@uri)}>"
     end
     alias_method :to_s, :to_ntriples
+    
+    def uri_node?
+      true
+    end
   end
 end

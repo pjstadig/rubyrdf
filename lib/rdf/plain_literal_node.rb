@@ -27,5 +27,9 @@ module RDF
       %Q("#{escape_ntriples(@lexical_form)}"#{@language_tag ? "@#{@language_tag}" : ''})
     end
     alias_method :to_s, :to_ntriples
+    
+    def plain_literal_node?
+      true
+    end
   end
 end

@@ -1,9 +1,30 @@
 module RDF
   class Statement
+    class InvalidSubjectError < Error
+      def initialize(subject)
+        super("Invalid Subject: #{subject}")
+      end
+    end
+    
+    class InvalidPredicateError < Error
+      def initialize(predicate)
+        super("Invalid Predicate: #{predicate}")
+      end
+    end
+    
+    class InvalidObjectError < Error
+      def initialize(object)
+        super("Invalid Object: #{object}")
+      end
+    end
+    
     attr_reader :subject, :predicate, :object
     
     def initialize(subject, predicate, object)
       @subject, @predicate, @object = subject, predicate, object
+      raise InvalidSubjectError.new(@subject) unless @subject.resource?
+      raise InvalidPredicateError.new(@predicate) unless @predicate.uri_node?
+      raise InvalidObjectError.new(@object) unless @object.node?
     end
     
     def hash

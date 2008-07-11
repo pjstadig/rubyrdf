@@ -1,5 +1,10 @@
-validation
-unicode normalization
+blank node validation
+uri node validation
+plain literal node validation
+typed literal node validation
+plain literal node unicode normalization
+typed literal node unicode normalization
+uri node unicode normalization
 sesame graph
 to_node
 to_f

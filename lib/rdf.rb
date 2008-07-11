@@ -79,3 +79,33 @@ module RDF
     :rdfs => 'http://www.w3.org/2000/01/rdf-schema#',
     :owl => 'http://www.w3.org/2002/07/owl#')
 end
+
+class Object
+  def blank_node?
+    false
+  end
+  
+  def uri_node?
+    false
+  end
+  
+  def typed_literal_node?
+    false
+  end
+  
+  def plain_literal_node?
+    false
+  end
+  
+  def resource?
+    uri_node? || blank_node?
+  end
+  
+  def literal_node?
+    plain_literal_node? || typed_literal_node?
+  end
+  
+  def node?
+    resource? || literal_node?
+  end
+end

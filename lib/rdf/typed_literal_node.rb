@@ -27,5 +27,9 @@ module RDF
       %Q("#{escape_ntriples(@lexical_form)}"^^<#{escape_ntriples(@datatype_uri)}>)
     end
     alias_method :to_s, :to_ntriples
+    
+    def typed_literal_node?
+      true
+    end
   end
 end

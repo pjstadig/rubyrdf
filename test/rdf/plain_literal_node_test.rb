@@ -52,4 +52,12 @@ class RDF::PlainLiteralNodeTest < Test::Unit::TestCase
     assert_equal '"\u0008\U00010000\t\n\r\"\\\\"@en',
                  RDF::PlainLiteralNode.new([0x8, 0x10000, 0x9, 0xa, 0xd, 0x22, 0x5c].pack('U*'), 'en').to_ntriples
   end
+  
+  def test_should_be_node
+    node = RDF::PlainLiteralNode.new('test')
+    
+    assert node.plain_literal_node?
+    assert node.literal_node?
+    assert node.node?
+  end
 end

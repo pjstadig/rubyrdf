@@ -14,6 +14,24 @@ class RDF::StatementTest < Test::Unit::TestCase
     assert_equal @ex::obj, stmt.object
   end
   
+  def test_should_validate_subject
+    assert_raise(RDF::Statement::InvalidSubjectError) {
+      RDF::Statement.new(RDF::PlainLiteralNode.new('test'), @ex::pred, @ex::obj)
+    }
+  end
+  
+  def test_should_validate_predicate
+    assert_raise(RDF::Statement::InvalidPredicateError) {
+      RDF::Statement.new(@ex::sub, RDF::PlainLiteralNode.new('test'), @ex::obj)
+    }
+  end
+  
+  def test_should_validate_object
+    assert_raise(RDF::Statement::InvalidObjectError) {
+      RDF::Statement.new(@ex::sub, @ex::pred, 'test')
+    }
+  end
+  
   def test_should_be_eq
     assert RDF::Statement.new(@ex::sub, @ex::pred, @ex::obj) ==
            RDF::Statement.new(@ex::sub, @ex::pred, @ex::obj)

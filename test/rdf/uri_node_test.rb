@@ -38,4 +38,12 @@ class RDF::URINodeTest < Test::Unit::TestCase
     node = RDF::URINode.new('http://stadig.name/')
     assert node.hash == RDF::URINode.new(node.uri).hash
   end
+  
+  def test_should_be_node
+    node = RDF::URINode.new('http://stadig.name/')
+    
+    assert node.uri_node?
+    assert node.resource?
+    assert node.node?
+  end
 end

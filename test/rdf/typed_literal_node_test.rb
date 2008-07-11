@@ -45,4 +45,12 @@ class RDF::TypedLiteralNodeTest < Test::Unit::TestCase
                  RDF::TypedLiteralNode.new([0x8, 0x10000, 0x9, 0xa, 0xd, 0x22, 0x5c].pack('U*'), 
                                            [0x8, 0x10000, 0x9, 0xa, 0xd, 0x22, 0x5c].pack('U*')).to_ntriples
   end
+  
+  def test_should_be_node
+    node = RDF::TypedLiteralNode.new('test', 'http://stadig.name/')
+    
+    assert node.typed_literal_node?
+    assert node.literal_node?
+    assert node.node?
+  end
 end

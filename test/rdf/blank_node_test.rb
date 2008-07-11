@@ -13,4 +13,12 @@ class RDF::BlankNodeTest < Test::Unit::TestCase
     assert_equal '_:test', RDF::BlankNode.new('test').to_ntriples
     assert_equal '_:test', RDF::BlankNode.new('test').to_s
   end
+  
+  def test_should_be_node
+    node = RDF::BlankNode.new
+    
+    assert node.blank_node?
+    assert node.resource?
+    assert node.node?
+  end
 end

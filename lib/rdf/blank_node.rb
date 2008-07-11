@@ -11,6 +11,10 @@ module RDF
     end
     alias_method :to_s, :to_ntriples
     
+    def blank_node?
+      true
+    end
+    
     private
       def genname
         @@id ||= 0
