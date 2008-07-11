@@ -2,11 +2,11 @@ require 'rdf/version'
 
 AUTHOR = 'Paul Stadig'  # can also be an array of Authors
 EMAIL = "paul@stadig.name"
-DESCRIPTION = "description of gem"
+DESCRIPTION = "A Resource Description Framework (RDF) library for Ruby."
 GEM_NAME = 'rubyrdf' # what ppl will type to install your gem
 RUBYFORGE_PROJECT = 'rubyrdf' # The unix name for your project
-HOMEPATH = "http://#{RUBYFORGE_PROJECT}.rubyforge.org"
-DOWNLOAD_PATH = "http://rubyforge.org/projects/#{RUBYFORGE_PROJECT}"
+HOMEPATH = "http://github.com/pjstadig/rubyrdf/wikis"
+DOWNLOAD_PATH = "http://github.com/pjstadig/rubyrdf/tarball/master"
 EXTRA_DEPENDENCIES = [
 #  ['activesupport', '>= 1.3.1']
 ]    # An array of rubygem dependencies [name, version]
