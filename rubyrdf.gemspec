@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Paul Stadig"]
-  s.date = %q{2008-07-11}
+  s.date = %q{2008-07-14}
   s.description = %q{A Resource Description Framework (RDF) library for Ruby.}
   s.email = ["paul@stadig.name"]
   s.extra_rdoc_files = ["History.txt", "License.txt", "Manifest.txt", "PostInstall.txt", "README.txt", "TODO.txt"]

@@ -27,7 +27,7 @@ module RDF
         post_request(repo_path('statements'), statement.to_statement.to_ntriples, {}, 'Content-Type' => 'text/plain')
       end
       
-      def import(data, format)
+      def import(data, format = :ntriples)
         headers = case format
         when :ntriples
           {'Content-Type' => 'text/plain; charset=utf-8'}
@@ -85,6 +85,8 @@ module RDF
       
       def post_request(path, data, params = {}, headers = {})
         Net::HTTP.start(@address, @port) do |http|
+          http.open_timeout = 6000
+          http.read_timeout = 6000
           http.post(format_uri(path, params), data, headers).body
         end
       end
