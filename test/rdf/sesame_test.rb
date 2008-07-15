@@ -1,8 +1,8 @@
-require File.dirname(__FILE__) + '/../../test_helper.rb'
+require File.dirname(__FILE__) + '/../test_helper.rb'
 
-class RDF::Sesame::BaseTest < Test::Unit::TestCase
+class RDF::SesameTest < Test::Unit::TestCase
   def setup
-    @graph = RDF::Sesame::Base.new('http://localhost:8180/openrdf-sesame', 'test')
+    @graph = RDF::Sesame.new('http://localhost:8180/openrdf-sesame', 'test')
     @graph.delete_all
     RDF::unregister_all!
     RDF::register(:ex => 'http://example.org/')
