@@ -1,6 +1,5 @@
 require 'uri'
 require 'net/http'
-require 'rexml/document'
 
 module RDF
   module Sesame

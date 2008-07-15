@@ -1,3 +1,5 @@
+require 'rexml/document'
+
 module RDF
   class SparqlResult < Array
     class InvalidDocument < Error
