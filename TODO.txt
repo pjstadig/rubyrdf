@@ -10,3 +10,4 @@ to_s
 to_str
 to_date
 to_time
+to_ruby
