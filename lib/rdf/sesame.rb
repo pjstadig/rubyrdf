@@ -138,7 +138,7 @@ module RDF
               transaction_xml_nodes(b, op[1])
             end
           elsif op[0] == :delete
-            b.delete do
+            b.remove do
               transaction_xml_nodes(b, op[1])
             end
           elsif op[0] == :delete_all
@@ -165,7 +165,7 @@ module RDF
       elsif node.is_a?(PlainLiteralNode)
         attrs = {}
         if node.language_tag
-          attrs[:"xml:lang"] = node.langage_tag
+          attrs[:"xml:lang"] = node.language_tag
         end
         
         b.literal(node.lexical_form, attrs)

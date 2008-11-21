@@ -75,26 +75,31 @@ class RDF::SesameTest < Test::Unit::TestCase
   end
   
   def test_should_commit_transaction
-    @graph.add(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+    stmt1 = RDF::Statement.new(RDF[:ex]::sub, RDF[:ex]::pred1, RDF::PlainLiteralNode.new('plainLiteral', 'en'))
+    stmt2 = RDF::Statement.new(RDF::BlankNode.new("test2"), RDF[:ex]::pred2, RDF::TypedLiteralNode.new('plainLiteral', RDF[:ex]::datatype))
+    @graph.add(stmt1)
     @graph.transaction do |t|
-      t.add(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
-      t.delete(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+      t.add(stmt2)
+      t.delete(stmt1)
     end
     
-    assert !@graph.include?(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
-    assert @graph.include?(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+    assert @graph.include?(stmt2)
+    assert !@graph.include?(stmt1)
   end
   
   def test_should_commit_in_middle_of_transaction
-    @graph.add(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+    stmt1 = RDF::Statement.new(RDF[:ex]::sub, RDF[:ex]::pred1, RDF::PlainLiteralNode.new('plainLiteral', 'en'))
+    stmt2 = RDF::Statement.new(RDF::BlankNode.new("test2"), RDF[:ex]::pred2, RDF::TypedLiteralNode.new('plainLiteral', RDF[:ex]::datatype))
+    @graph.add(stmt1)
     @graph.transaction do |t|
-      t.add(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+      t.add(stmt2)
       t.commit
-      t.delete(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+      t.delete(stmt1)
+      t.rollback
     end
     
-    assert !@graph.include?(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
-    assert @graph.include?(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+    assert @graph.include?(stmt1)
+    assert @graph.include?(stmt2)
   end
   
   def test_should_accept_empty_transaction
@@ -103,42 +108,48 @@ class RDF::SesameTest < Test::Unit::TestCase
   end
   
   def test_should_rollback_transaction
-    @graph.add(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+    stmt1 = RDF::Statement.new(RDF[:ex]::sub, RDF[:ex]::pred1, RDF::PlainLiteralNode.new('plainLiteral', 'en'))
+    stmt2 = RDF::Statement.new(RDF::BlankNode.new("test2"), RDF[:ex]::pred2, RDF::TypedLiteralNode.new('plainLiteral', RDF[:ex]::datatype))
+    @graph.add(stmt1)
     @graph.transaction do |t|
-      t.add(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
-      t.delete(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+      t.add(stmt2)
+      t.delete(stmt1)
       t.rollback
     end
     
-    assert @graph.include?(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
-    assert !@graph.include?(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+    assert @graph.include?(stmt1)
+    assert !@graph.include?(stmt2)
   end
   
   def test_should_rollback_transaction_on_exception
-    @graph.add(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+    stmt1 = RDF::Statement.new(RDF[:ex]::sub, RDF[:ex]::pred1, RDF::PlainLiteralNode.new('plainLiteral', 'en'))
+    stmt2 = RDF::Statement.new(RDF::BlankNode.new("test2"), RDF[:ex]::pred2, RDF::TypedLiteralNode.new('plainLiteral', RDF[:ex]::datatype))
+    @graph.add(stmt1)
     begin
       @graph.transaction do |t|
-        t.add(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
-        t.delete(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+        t.add(stmt2)
+        t.delete(stmt1)
         throw "test"
       end
       fail "Should rethrow exception"
     rescue
     end
     
-    assert @graph.include?(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
-    assert !@graph.include?(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+    assert @graph.include?(stmt1)
+    assert !@graph.include?(stmt2)
   end
   
   def test_should_rollback_in_middle_of_transaction
-    @graph.add(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+    stmt1 = RDF::Statement.new(RDF[:ex]::sub, RDF[:ex]::pred1, RDF::PlainLiteralNode.new('plainLiteral', 'en'))
+    stmt2 = RDF::Statement.new(RDF::BlankNode.new("test2"), RDF[:ex]::pred2, RDF::TypedLiteralNode.new('plainLiteral', RDF[:ex]::datatype))
+    @graph.add(stmt1)
     @graph.transaction do |t|
-      t.add(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+      t.add(stmt2)
       t.rollback
-      t.delete(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
+      t.delete(stmt1)
     end
     
-    assert !@graph.include?(RDF[:ex]::sub1, RDF[:ex]::pred1, RDF[:ex]::obj1)
-    assert !@graph.include?(RDF[:ex]::sub2, RDF[:ex]::pred2, RDF[:ex]::obj2)
+    assert !@graph.include?(stmt1)
+    assert !@graph.include?(stmt2)
   end
 end
