@@ -1,4 +1,3 @@
-(in /home/pstadig/eclipse/stadigtech/rubyrdf)
 Gem::Specification.new do |s|
   s.name = %q{rubyrdf}
   s.version = "0.0.2"
