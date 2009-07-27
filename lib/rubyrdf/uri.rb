@@ -1,3 +1,5 @@
+require 'uri'
+
 module URI #:nodoc:
   class Generic
     # Returns an instance of Addressable::URI representing this URI.
@@ -15,4 +17,3 @@ module Addressable #:nodoc:
     end
   end
 end
-

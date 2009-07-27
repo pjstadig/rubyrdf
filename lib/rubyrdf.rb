@@ -60,6 +60,4 @@ module RubyRDF
   end
 end
 
-require 'rdf'
 RubyRDF.require_all_libs_relative_to(__FILE__)
-RubyRDF.require_all_libs_relative_to(__FILE__, 'rdf')
