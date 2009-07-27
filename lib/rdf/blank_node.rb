@@ -1,3 +1,5 @@
+require 'rdf/node'
+
 module RDF
   class BlankNode < Node
     attr_reader :name
