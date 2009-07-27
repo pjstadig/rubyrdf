@@ -5,8 +5,16 @@ begin
   require 'activesupport'
 rescue LoadError
   require 'rubygems'
-  gem 'activesupport','>=1.4.0'
+  gem 'activesupport', '>=1.4.0'
   require 'activesupport'
+end
+
+begin
+  require 'addressable/uri'
+rescue LoadError
+  require 'rubygems'
+  gem 'addressable', '>=2.1.0'
+  require 'addressable/uri'
 end
 
 module RubyRDF
@@ -53,5 +61,5 @@ module RubyRDF
 end
 
 require 'rdf'
+RubyRDF.require_all_libs_relative_to(__FILE__)
 RubyRDF.require_all_libs_relative_to(__FILE__, 'rdf')
-

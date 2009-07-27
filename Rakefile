@@ -25,5 +25,7 @@ PROJ.readme_file = 'README.rdoc'
 PROJ.ruby_opts = []
 PROJ.test.files = Dir[File.join(File.dirname(__FILE__), %w[test ** *_test.rb])]
 
-PROJ.spec.opts << '--color'
+PROJ.gem.dependencies = [['addressable', '>=2.1.0'],
+                         ['activesupport', '>=1.4.0']]
 
+PROJ.spec.opts << '--color'
