@@ -12,7 +12,7 @@ end
 ensure_in_path 'lib'
 require 'rubyrdf'
 
-task :default => ['test:run', 'spec:run']
+task :default => 'spec:run'
 
 PROJ.name = 'rubyrdf'
 PROJ.authors = 'Paul Stadig'
