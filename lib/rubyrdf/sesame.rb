@@ -2,7 +2,7 @@ require 'uri'
 require 'net/http'
 
 module RubyRDF
-  class Sesame
+  class Sesame < Graph
     attr_reader :address, :port, :path, :repository
 
     def initialize(uri, repository)
@@ -102,9 +102,23 @@ module RubyRDF
     end
 
     def to_param_hash(statement)
-      {:subj => statement.subject.to_ntriples,
-       :pred => statement.predicate.to_ntriples,
-       :obj => statement.object.to_ntriples}
+      {:subj => node_to_ntriples(statement.subject),
+       :pred => node_to_ntriples(statement.predicate),
+       :obj => node_to_ntriples(statement.object)}
+    end
+
+    def node_to_ntriples(node)
+      case node
+      when Addressable::URI
+        "<#{node}>"
+      when TypedLiteral
+        %Q("#{node.lexical_form}"^^<#{node.datatype_uri}>)
+      when PlainLiteral
+        %Q("#{node.lexical_form}") +
+          (node.language_tag ? "@#{node.language_tag}" : "")
+      when BNode
+        "_:bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
+      end
     end
 
     def get_request(path, params = {}, headers = {})
@@ -130,16 +144,17 @@ module RubyRDF
     end
 
     def to_transaction_xml(transaction)
+      bnodes = {}
       b = Builder::XmlMarkup.new
       b.transaction do
         transaction.each do |op|
           if op[0] == :add
             b.add do
-              transaction_xml_nodes(b, op[1])
+              transaction_xml_nodes(b, op[1], bnodes)
             end
           elsif op[0] == :delete
             b.remove do
-              transaction_xml_nodes(b, op[1])
+              transaction_xml_nodes(b, op[1], bnodes)
             end
           elsif op[0] == :delete_all
             b.clear
@@ -149,17 +164,17 @@ module RubyRDF
       b.target!
     end
 
-    def transaction_xml_nodes(b, stmt)
-      transaction_xml_node(b, stmt.subject)
-      transaction_xml_node(b, stmt.predicate)
-      transaction_xml_node(b, stmt.object)
+    def transaction_xml_nodes(b, stmt, bnodes)
+      transaction_xml_node(b, stmt.subject, bnodes)
+      transaction_xml_node(b, stmt.predicate, bnodes)
+      transaction_xml_node(b, stmt.object, bnodes)
     end
 
-    def transaction_xml_node(b, node)
+    def transaction_xml_node(b, node, bnodes)
       if node.is_a?(Addressable::URI)
-        b.uri(node.uri)
+        b.uri(node.to_s)
       elsif node.is_a?(BNode)
-        b.bnode(node.name)
+        b.bnode(bnodes[node] ||= generate_bnode_name)
       elsif node.is_a?(TypedLiteral)
         b.literal(node.lexical_form, :datatype => node.datatype_uri)
       elsif node.is_a?(PlainLiteral)
@@ -172,8 +187,13 @@ module RubyRDF
       end
     end
 
+    def generate_bnode_name
+      "_:bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
+    end
+
     def _commit(transaction)
-      post_request(repo_path('statements'), to_transaction_xml(transaction), {}, 'Content-Type' => 'application/x-rdftransaction')
+      doc = to_transaction_xml(transaction)
+      post_request(repo_path('statements'), doc, {}, 'Content-Type' => 'application/x-rdftransaction')
     end
 
     def format_uri(path, params = {})

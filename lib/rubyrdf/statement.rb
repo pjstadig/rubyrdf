@@ -54,6 +54,10 @@ module RubyRDF
     def to_triple
       [@subject, @predicate, @object]
     end
+
+    def to_ntriples
+      MemoryGraph.new(self).to_ntriples
+    end
   end
 end
 

@@ -57,17 +57,17 @@ describe RubyRDF::Sesame do
   it "should execute SPARQL select query" do
     @graph.add(ex::a, ex::b, RubyRDF::PlainLiteral.new('test'))
     @graph.add(ex::d, ex::b, RubyRDF::PlainLiteral.new('test', 'en'))
-    @graph.add(ex::d, ex::b, RubyRDF::TypedLiteral.new('test', ex::a.uri))
+    @graph.add(ex::d, ex::b, RubyRDF::TypedLiteral.new('test', ex::a))
     @graph.add(ex::d, ex::b, ex::e)
     @graph.add(ex::d, ex::b, RubyRDF::BNode.new)
 
-    result = @graph.select("SELECT ?y WHERE {?x #{ex::b} ?y . }")
+    result = @graph.select("SELECT ?y WHERE {?x <#{ex::b}> ?y . }")
     result.size.should == 5
     result.any?{|r| r['y'] == RubyRDF::PlainLiteral.new('test')}.should be_true
     result.any?{|r| r['y'] == RubyRDF::PlainLiteral.new('test', 'en')}.should be_true
-    result.any?{|r| r['y'] == RubyRDF::TypedLiteral.new('test', ex::a.uri)}.should be_true
+    result.any?{|r| r['y'] == RubyRDF::TypedLiteral.new('test', ex::a)}.should be_true
     result.any?{|r| r['y'] == ex::e}.should be_true
-    result.any?{|r| r['y'].blank_node?}.should be_true
+    result.any?{|r| r['y'].is_a?(RubyRDF::BNode)}.should be_true
   end
 
   it "should execute SPARQL select query with empty result" do
@@ -101,7 +101,7 @@ describe RubyRDF::Sesame do
     end
 
     @graph.include?(stmt2).should be_true
-    !@graph.include?(stmt1).should be_true
+    @graph.include?(stmt1).should be_false
   end
 
   it "should commit in the middle of a transaction" do
@@ -135,7 +135,7 @@ describe RubyRDF::Sesame do
     end
 
     @graph.include?(stmt1).should be_true
-    !@graph.include?(stmt2).should be_true
+    @graph.include?(stmt2).should be_false
   end
 
   it "should rollback a transaction on an error" do
@@ -153,7 +153,7 @@ describe RubyRDF::Sesame do
     end
 
     @graph.include?(stmt1).should be_true
-    !@graph.include?(stmt2).should be_true
+    @graph.include?(stmt2).should be_false
   end
 
   it "should rollback in the middle of a transaction" do
@@ -166,7 +166,7 @@ describe RubyRDF::Sesame do
       t.delete(stmt1)
     end
 
-    !@graph.include?(stmt1).should be_true
-    !@graph.include?(stmt2).should be_true
+    @graph.include?(stmt1).should be_false
+    @graph.include?(stmt2).should be_false
   end
 end

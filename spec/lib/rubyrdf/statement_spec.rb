@@ -114,6 +114,12 @@ describe RubyRDF::Statement do
   it 'should return array of subject, predicate, object for to_triple' do
     @it.to_triple.should == [@it.subject, @it.predicate, @it.object]
   end
+
+  describe "to_ntriples" do
+    it "should return an NTriples export" do
+      @it.to_ntriples.should == "<#{rdf::subject}> <#{rdf::type}> <#{rdf::Property}>."
+    end
+  end
 end
 
 describe "Array#to_statement" do

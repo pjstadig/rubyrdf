@@ -1,3 +1,5 @@
+require 'digest/md5'
+
 module RubyRDF
   # An in-memory graph implementation.
   class MemoryGraph < Graph
@@ -55,6 +57,14 @@ module RubyRDF
     # Returns true if the statement was deleted, false if it was already not in the graph.
     def delete(*statement)
       unindex_statement(statement.to_statement)
+    end
+
+    def to_ntriples
+      # TODO this should use the export function
+      bnodes = {}
+      @statements.map do |s|
+        statement_to_ntriples(s, bnodes)
+      end.join("\n")
     end
 
     private
@@ -155,6 +165,29 @@ module RubyRDF
       else
         []
       end.to_a
+    end
+
+    def statement_to_ntriples(statement, bnodes)
+      statement.to_triple.map{|n| node_to_ntriples(n, bnodes)}.join(" ") + "."
+    end
+
+    def node_to_ntriples(node, bnodes)
+      case node
+      when Addressable::URI
+        "<#{node}>"
+      when TypedLiteral
+        %Q("#{node.lexical_form}"^^<#{node.datatype_uri}>)
+      when PlainLiteral
+        %Q("#{node.lexical_form}") +
+          (node.language_tag ? "@#{node.language_tag}" : "")
+      when BNode
+        bnodes[node] ||= generate_bnode_name
+        "_:#{bnodes[node]}"
+      end
+    end
+
+    def generate_bnode_name
+      "bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
     end
   end
 end

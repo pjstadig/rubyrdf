@@ -104,3 +104,19 @@ describe RubyRDF::MemoryGraph, "with statements" do
     g.size.should == 0
   end
 end
+
+describe RubyRDF::MemoryGraph, 'to_ntriples' do
+  before do
+    RubyRDF::Namespaces.register(:ex => "http://example.com/")
+    @it = RubyRDF::MemoryGraph.new
+  end
+
+  def ex
+    RubyRDF::Namespaces.ex
+  end
+
+  it "should return an NTriples export" do
+    @it.add(ex::a, ex::b, ex::c)
+    @it.to_ntriples.should == "<#{ex::a}> <#{ex::b}> <#{ex::c}>."
+  end
+end
