@@ -1,6 +1,14 @@
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. lib rubyrdf]))
 RubyRDF.require_all_libs_relative_to(__FILE__, 'support')
 
+begin
+  require 'spec/autorun'
+rescue LoadError
+  require 'rubygems'
+  gem 'spec'
+  require 'spec/autorun'
+end
+
 Spec::Runner.configure do |config|
   # == Mock Framework
   #

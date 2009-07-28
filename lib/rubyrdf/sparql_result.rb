@@ -29,14 +29,14 @@ module RubyRDF
     def parse_node(node, bnodes)
       case node.name
       when 'uri'
-        RDF::URINode.new(node.text)
+        Addressable::URI.parse(node.text)
       when 'bnode'
-        bnodes[node.text] ||= RDF::BlankNode.new
+        bnodes[node.text] ||= RubyRDF::BNode.new
       when 'literal'
         if node.attributes.include?('datatype')
-          RDF::TypedLiteralNode.new(node.text, node.attributes['datatype'])
+          RubyRDF::TypedLiteral.new(node.text, node.attributes['datatype'])
         else
-          RDF::PlainLiteralNode.new(node.text, node.attributes['lang'])
+          RubyRDF::PlainLiteral.new(node.text, node.attributes['lang'])
         end
       end
     end

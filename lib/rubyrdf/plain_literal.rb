@@ -4,7 +4,7 @@ module RubyRDF
     attr_reader :language_tag
 
     def initialize(lexical_form, language_tag = nil)
-      @lexical_form = lexical_form
+      @lexical_form = lexical_form.to_str.mb_chars.normalize(:c).to_str
       @language_tag = language_tag
     end
 

@@ -59,6 +59,27 @@ module RubyRDF
       end
     end
 
+    def self.registered?(ns)
+      @@namespaces.keys.include?(ns.to_sym)
+    end
+
+    def self.unregister(ns)
+      prefix = ns.to_sym
+      @@namespaces.delete(prefix)
+      class_eval <<-END
+        send(:remove_method, :#{prefix})
+        class << self
+          send(:remove_method, :#{prefix})
+        end
+      END
+    end
+
+    def self.unregister_all
+      (@@namespaces.keys - [:rdf, :xsd, :rdfs, :owl, :dc]).each do |ns|
+        unregister(ns)
+      end
+    end
+
     register(:rdf => "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
              :xsd => "http://www.w3.org/2001/XMLSchema#",
              :rdfs => "http://www.w3.org/2000/01/rdf-schema#",

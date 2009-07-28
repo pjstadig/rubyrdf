@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::Namespaces do
   before do
-    RubyRDF::Namespaces.unregister_all!
+    RubyRDF::Namespaces.unregister_all
     @prefix = "ex"
     @uri = "http://example.com/"
     RubyRDF::Namespaces.register(@prefix => @uri)
@@ -57,15 +57,28 @@ describe RubyRDF::Namespaces do
       Addressable::URI.parse("http://purl.org/dc/elements/1.1/creator")
   end
 
-  it "should unregister" do
-    RubyRDF::Namespaces.unregister(:ex)
-    RubyRDF::Namespaces.registered?(:ex).should be_false
+  describe "unregister" do
+    before do
+      RubyRDF::Namespaces.unregister(@prefix)
+    end
+
+    it "should remove namespace" do
+      RubyRDF::Namespaces.registered?(@prefix).should be_false
+    end
+
+    it "should remove class method" do
+      RubyRDF::Namespaces.methods.should_not be_include(@prefix.to_s)
+    end
+
+    it "should remove instance method" do
+      RubyRDF::Namespaces.instance_methods.should_not be_include(@prefix.to_s)
+    end
   end
 
   describe "unregister_all" do
     it "should unregister all" do
       RubyRDF::Namespaces.unregister_all
-      RubyRDF::Namespaces.registered?(:ex).should be_false
+      RubyRDF::Namespaces.registered?(@prefix).should be_false
     end
 
     it "should not unregister defaults" do

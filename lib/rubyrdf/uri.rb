@@ -11,6 +11,15 @@ end
 
 module Addressable #:nodoc:
   class URI
+    class << self
+      unless method_defined?(:parse_with_normalization)
+        def parse_with_normalization(uri)
+          parse_without_normalization(uri.to_str.mb_chars.normalize(:c))
+        end
+        alias_method_chain :parse, :normalization
+      end
+    end
+
     # Returns self
     def to_uri
       self

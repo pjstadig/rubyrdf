@@ -156,13 +156,13 @@ module RubyRDF
     end
 
     def transaction_xml_node(b, node)
-      if node.is_a?(URINode)
+      if node.is_a?(Addressable::URI)
         b.uri(node.uri)
-      elsif node.is_a?(BlankNode)
+      elsif node.is_a?(BNode)
         b.bnode(node.name)
-      elsif node.is_a?(TypedLiteralNode)
+      elsif node.is_a?(TypedLiteral)
         b.literal(node.lexical_form, :datatype => node.datatype_uri)
-      elsif node.is_a?(PlainLiteralNode)
+      elsif node.is_a?(PlainLiteral)
         attrs = {}
         if node.language_tag
           attrs[:"xml:lang"] = node.language_tag

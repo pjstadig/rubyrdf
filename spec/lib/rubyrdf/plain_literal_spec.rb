@@ -12,7 +12,7 @@ describe RubyRDF::PlainLiteral, "without language_tag" do
     end
 
     it "should normalize lexical_form" do
-      RubyRDF::PlainLiteralNode.new([0x2126].pack('U')).lexical_form.should == [0x03a9].pack('U')
+      RubyRDF::PlainLiteral.new([0x2126].pack('U')).lexical_form.should == [0x03a9].pack('U')
     end
 
     it "should assign language_tag" do
@@ -62,12 +62,6 @@ describe RubyRDF::PlainLiteral, "without language_tag" do
 
   it "should return self from to_literal" do
     @it.to_literal.should equal(@it)
-  end
-
-  it "should be a node" do
-    @it.should be_plain_literal_node
-    @it.should be_literal_node
-    @it.should be_node
   end
 end
 

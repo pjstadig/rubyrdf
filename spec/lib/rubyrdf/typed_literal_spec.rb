@@ -23,16 +23,16 @@ describe RubyRDF::TypedLiteral do
     it "should normalize datatype_uri" do
       RubyRDF::TypedLiteral.new(@lexical_form,
                                 Addressable::URI.parse("http://" + [0x2126].pack('U'))).
-        datatype_uri.to_s.should == Addressable::URI.parse("http://" + [0x03a9].pack('U'))
+        datatype_uri.to_s.should == "http://" + [0x03a9].pack('U')
     end
 
     it "should normalize datatype_uri from a string" do
       RubyRDF::TypedLiteral.new(@lexical_form, "http://" + [0x2126].pack('U')).
-        datatype_uri.to_s.should == Addressable::URI.parse("http://" + [0x03a9].pack('U'))
+        datatype_uri.to_s.should == "http://" + [0x03a9].pack('U')
     end
 
     it "should convert datatype_uri from a string to an URI" do
-      RubyRDF::TypedLiteral.new(@lexical_form, @datatype_uri.to_s).should == @datatype_uri
+      RubyRDF::TypedLiteral.new(@lexical_form, @datatype_uri.to_s).datatype_uri.should == @datatype_uri
     end
   end
 
@@ -78,12 +78,6 @@ describe RubyRDF::TypedLiteral do
 
   it "should return self for to_literal" do
     @it.to_literal.should equal(@it)
-  end
-
-  it "should be node" do
-    @it.should be_typed_literal_node
-    @it.should be_literal_node
-    @it.should be_node
   end
 end
 

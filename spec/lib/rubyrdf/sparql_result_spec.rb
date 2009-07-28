@@ -5,6 +5,10 @@ describe RubyRDF::SparqlResult do
     RubyRDF::Namespaces.register(:ex => 'http://example.com/')
   end
 
+  def ex
+    RubyRDF::Namespaces.ex
+  end
+
   it "should preserve blank node identity" do
     result = RubyRDF::SparqlResult.new(<<-ENDL)
       <?xml version='1.0' encoding='UTF-8'?>
@@ -67,7 +71,7 @@ describe RubyRDF::SparqlResult do
       </sparql>
     ENDL
 
-    reusult[0]['x'].should == RubyRDF::PlainLiteralNode.new('test')
+    result[0]['x'].should == RubyRDF::PlainLiteral.new('test')
   end
 
   it "should parse plain literal node with a language tag" do
@@ -87,7 +91,7 @@ describe RubyRDF::SparqlResult do
       </sparql>
     ENDL
 
-    result[0]['x'].should == RubyRDF::PlainLiteralNode.new('test', 'en')
+    result[0]['x'].should == RubyRDF::PlainLiteral.new('test', 'en')
   end
 
   it "should parse typed literal node" do
@@ -107,7 +111,7 @@ describe RubyRDF::SparqlResult do
       </sparql>
     ENDL
 
-    result[0]['x'].should == RubyRDF::TypedLiteralNode.new('test', ex::a)
+    result[0]['x'].should == RubyRDF::TypedLiteral.new('test', ex::a)
   end
 
   it "should validate data" do

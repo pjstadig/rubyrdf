@@ -4,8 +4,12 @@ module RubyRDF
     attr_reader :datatype_uri
 
     def initialize(lexical_form, datatype_uri)
-      @lexical_form = lexical_form
-      @datatype_uri = datatype_uri
+      @lexical_form = lexical_form.to_str.mb_chars.normalize(:c).to_str
+      @datatype_uri = if datatype_uri.respond_to?(:to_uri)
+                        datatype_uri.to_uri
+                      else
+                        Addressable::URI.parse(datatype_uri.to_str)
+                      end
     end
 
     def ==(o)
