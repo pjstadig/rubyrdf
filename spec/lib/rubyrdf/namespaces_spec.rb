@@ -2,6 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::Namespaces do
   before do
+    RubyRDF::Namespaces.unregister_all!
     @prefix = "ex"
     @uri = "http://example.com/"
     RubyRDF::Namespaces.register(@prefix => @uri)
@@ -54,5 +55,26 @@ describe RubyRDF::Namespaces do
   it "should preregister dc namespace" do
     RubyRDF::Namespaces.dc::creator.should ==
       Addressable::URI.parse("http://purl.org/dc/elements/1.1/creator")
+  end
+
+  it "should unregister" do
+    RubyRDF::Namespaces.unregister(:ex)
+    RubyRDF::Namespaces.registered?(:ex).should be_false
+  end
+
+  describe "unregister_all" do
+    it "should unregister all" do
+      RubyRDF::Namespaces.unregister_all
+      RubyRDF::Namespaces.registered?(:ex).should be_false
+    end
+
+    it "should not unregister defaults" do
+      RubyRDF::Namespaces.unregister_all
+      RubyRDF::Namespaces.registered?(:rdf).should be_true
+      RubyRDF::Namespaces.registered?(:xsd).should be_true
+      RubyRDF::Namespaces.registered?(:rdfs).should be_true
+      RubyRDF::Namespaces.registered?(:owl).should be_true
+      RubyRDF::Namespaces.registered?(:dc).should be_true
+    end
   end
 end
