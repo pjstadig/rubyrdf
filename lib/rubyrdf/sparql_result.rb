@@ -1,16 +1,16 @@
 require 'rexml/document'
 
-module RDF
+module RubyRDF
   class SparqlResult < Array
     class InvalidDocument < Error
       attr_reader :document
-      
+
       def initialize(document)
         super("Invalid SPARQL Result Document")
         @document = document
       end
     end
-    
+
     def initialize(result)
       super()
       bnodes = {}
@@ -25,7 +25,7 @@ module RDF
     rescue REXML::ParseException
       raise InvalidDocument.new(result)
     end
-    
+
     def parse_node(node, bnodes)
       case node.name
       when 'uri'

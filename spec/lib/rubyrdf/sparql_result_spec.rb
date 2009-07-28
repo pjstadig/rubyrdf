@@ -1,13 +1,12 @@
-require File.dirname(__FILE__) + '/../test_helper.rb'
+require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]))
 
-class RDF::SparqlResultTest < Test::Unit::TestCase
-  def setup
-    RDF.unregister_all!
-    RDF.register(:ex => 'http://example.com/')
+describe RubyRDF::SparqlResult do
+  before do
+    RubyRDF::Namespaces.register(:ex => 'http://example.com/')
   end
 
-  def test_should_preserve_blank_node_identity
-    result = RDF::SparqlResult.new(<<-ENDL)
+  it "should preserve blank node identity" do
+    result = RubyRDF::SparqlResult.new(<<-ENDL)
       <?xml version='1.0' encoding='UTF-8'?>
       <sparql xmlns='http://www.w3.org/2005/sparql-results#'>
         <head>
@@ -28,11 +27,11 @@ class RDF::SparqlResultTest < Test::Unit::TestCase
       </sparql>
     ENDL
 
-    assert_same result[0]['x'], result[1]['x']
+    result[1]['x'].should equal(result[0]['x'])
   end
 
-  def test_should_parse_uri_node
-    result = RDF::SparqlResult.new(<<-ENDL)
+  it "should parse uri node" do
+    result = RubyRDF::SparqlResult.new(<<-ENDL)
       <?xml version='1.0' encoding='UTF-8'?>
       <sparql xmlns='http://www.w3.org/2005/sparql-results#'>
         <head>
@@ -48,11 +47,11 @@ class RDF::SparqlResultTest < Test::Unit::TestCase
       </sparql>
     ENDL
 
-    assert_equal RDF[:ex]::a, result[0]['x']
+    result[0]['x'].should == ex::a
   end
 
-  def test_should_parse_plain_literal_node
-    result = RDF::SparqlResult.new(<<-ENDL)
+  it "should parse plain literal node" do
+    result = RubyRDF::SparqlResult.new(<<-ENDL)
       <?xml version='1.0' encoding='UTF-8'?>
       <sparql xmlns='http://www.w3.org/2005/sparql-results#'>
         <head>
@@ -68,9 +67,11 @@ class RDF::SparqlResultTest < Test::Unit::TestCase
       </sparql>
     ENDL
 
-    assert_equal RDF::PlainLiteralNode.new('test'), result[0]['x']
+    reusult[0]['x'].should == RubyRDF::PlainLiteralNode.new('test')
+  end
 
-    result = RDF::SparqlResult.new(<<-ENDL)
+  it "should parse plain literal node with a language tag" do
+    result = RubyRDF::SparqlResult.new(<<-ENDL)
       <?xml version='1.0' encoding='UTF-8'?>
       <sparql xmlns='http://www.w3.org/2005/sparql-results#'>
         <head>
@@ -86,11 +87,11 @@ class RDF::SparqlResultTest < Test::Unit::TestCase
       </sparql>
     ENDL
 
-    assert_equal RDF::PlainLiteralNode.new('test', 'en'), result[0]['x']
+    result[0]['x'].should == RubyRDF::PlainLiteralNode.new('test', 'en')
   end
 
-  def test_should_parse_typed_literal_node
-    result = RDF::SparqlResult.new(<<-ENDL)
+  it "should parse typed literal node" do
+    result = RubyRDF::SparqlResult.new(<<-ENDL)
       <?xml version='1.0' encoding='UTF-8'?>
       <sparql xmlns='http://www.w3.org/2005/sparql-results#'>
         <head>
@@ -106,12 +107,12 @@ class RDF::SparqlResultTest < Test::Unit::TestCase
       </sparql>
     ENDL
 
-    assert_equal RDF::TypedLiteralNode.new('test', 'http://example.com/a'), result[0]['x']
+    result[0]['x'].should == RubyRDF::TypedLiteralNode.new('test', ex::a)
   end
 
-  def test_should_validate_data
-    assert_raises(RDF::SparqlResult::InvalidDocument) {
-      RDF::SparqlResult.new('<test>')
-    }
+  it "should validate data" do
+    lambda {
+      RubyRDF::SparqlResult.new('<test>')
+    }.should raise_error(RubyRDF::SparqlResult::InvalidDocument)
   end
 end
