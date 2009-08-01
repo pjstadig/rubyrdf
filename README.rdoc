@@ -9,7 +9,7 @@ A pure Ruby library for consuming and producing RDF data.
 
 == FEATURES/PROBLEMS:
 
-Completed:
+=== Completed:
 * Fully compliant with {RDF}[http://www.w3.org/RDF/] and
   {OWL}[http://www.w3.org/2004/OWL/] specifications.
 * Pluggable graph implementation with built-in implementations:
@@ -22,7 +22,7 @@ Completed:
     2.to_literal
     => "2"^^<http://www.w3.org/2001/XMLSchema#integer>
 
-In-progress:
+=== In-progress:
 * {SPARQL}[http://www.w3.org/2001/sw/DataAccess/].
 * Pluggable graph implementation with built-in implementations:
   * Federated graph (for transparently consolidating multiple, distributed graphs)
