@@ -1,6 +1,7 @@
 require 'uri'
 require 'net/http'
 
+# TODO use Addressable instead of URI
 module RubyRDF
   class Sesame < Graph
     attr_reader :address, :port, :path, :repository

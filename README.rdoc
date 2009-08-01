@@ -1,14 +1,34 @@
-rubyrdf
-    by FIXME (your name)
-    FIXME (url)
+= rubyrdf
+
+* { http://rubyrdf.rubyforge.org/}[http://rubyrdf.rubyforge.org/]
+* { http://github.com/pjstadig/rubyrdf/tree/master/}[http://github.com/pjstadig/rubyrdf/tree/master/]
 
 == DESCRIPTION:
 
-FIXME (describe your package)
+A pure Ruby library for consuming and producing RDF data.
 
 == FEATURES/PROBLEMS:
 
-* FIXME (list of features or problems)
+Completed:
+* Fully compliant with {RDF}[http://www.w3.org/RDF/] and
+  {OWL}[http://www.w3.org/2004/OWL/] specifications.
+* Pluggable graph implementation with built-in implementations:
+  * In-memory graph
+  * Sesame2 repository
+* Namespaces for easy generation of URIs:
+    rdf::type
+    => http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+* Conversion of Ruby types to RDF typed literals
+    2.to_literal
+    => "2"^^<http://www.w3.org/2001/XMLSchema#integer>
+
+In-progress:
+* {SPARQL}[http://www.w3.org/2001/sw/DataAccess/].
+* Pluggable graph implementation with built-in implementations:
+  * Federated graph (for transparently consolidating multiple, distributed graphs)
+  * File based graphs (RDF/XML, NTriples, etc.)
+* Rule based reasoner for reasoning over any graph implementation (including the consolidated
+  graph).
 
 == SYNOPSIS:
 
@@ -16,17 +36,26 @@ FIXME (describe your package)
 
 == REQUIREMENTS:
 
-* FIXME (list of requirements)
+* {ruby1.8}[http://www.ruby-lang.org/]
+* {rubygems}[http://www.rubygems.org/]
+* {addressable}[http://addressable.rubyforge.org/]
+* {activesupport}[http://rubyforge.org/projects/activesupport/]
 
 == INSTALL:
 
-* FIXME (sudo gem install, anything else)
+To install the latest stable release:
+
+  sudo gem install rubyrdf
+
+To install the latest unstable release:
+
+  sudo gem install pjstadig-rubyrdf --source http://gems.github.com
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2008 FIXME (different license?)
+Copyright (c) 2009 Paul Stadig
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

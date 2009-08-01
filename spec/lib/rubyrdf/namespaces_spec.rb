@@ -1,5 +1,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]))
 
+# TODO add tests for registered? method
+# TODO verify coverage
 describe RubyRDF::Namespaces do
   before do
     RubyRDF::Namespaces.unregister_all
