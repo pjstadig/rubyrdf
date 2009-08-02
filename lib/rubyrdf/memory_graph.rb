@@ -24,7 +24,7 @@ module RubyRDF
     #
     # See Graph#subgraph for more information.
     def subgraph(*statement)
-      subject, predicate, object = statement.to_triple.map{|x| x || BNode.new}
+      subject, predicate, object = statement.to_triple.map{|x| x || Object.new}
       MemoryGraph.new(*find_statements(subject, predicate, object))
     rescue InvalidStatementError
       MemoryGraph.new
@@ -117,13 +117,13 @@ module RubyRDF
     end
 
     def increment(idx, key)
-      if key.is_a?(BNode)
+      if bnode?(key)
         idx[key] += 1
       end
     end
 
     def decrement(idx, key)
-      if key.is_a?(BNode)
+      if bnode?(key)
         idx[key] -= 1
         idx.delete(key) if idx[key] == 0
       end
@@ -180,7 +180,7 @@ module RubyRDF
       when PlainLiteral
         %Q("#{node.lexical_form}") +
           (node.language_tag ? "@#{node.language_tag}" : "")
-      when BNode
+      else
         bnodes[node] ||= generate_bnode_name
         "_:#{bnodes[node]}"
       end

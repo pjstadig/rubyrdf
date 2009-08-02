@@ -57,7 +57,7 @@ module RubyRDF
     #
     # +node+ is a variable if it is a Symbol, or if it is a BNode that is unknown to this graph.
     def variable?(node)
-      node.is_a?(Symbol) || (node.is_a?(BNode) && !known?(node))
+      node.is_a?(Symbol) || (bnode?(node) && !known?(node))
     end
 
     # Adds +statement+ to the graph.
@@ -109,11 +109,23 @@ module RubyRDF
       bnodes = {}
       statements.map{|st| st.to_statement}.each do |st|
         s, p, o = st.subject, st.predicate, st.object
-        bnodes[s] ||= BNode.new if s.is_a?(BNode)
-        bnodes[o] ||= BNode.new if o.is_a?(BNode)
+        bnodes[s] ||= Object.new if bnode?(s)
+        bnodes[o] ||= Object.new if bnode?(o)
 
         add(bnodes[s] || s, p, bnodes[o] || o)
       end
+    end
+
+    def uri?(node)
+      node.is_a?(Addressable::URI)
+    end
+
+    def literal?(node)
+      node.is_a?(PlainLiteral) || node.is_a?(TypedLiteral)
+    end
+
+    def bnode?(node)
+      !uri?(node) && !literal?(node)
     end
   end
 end

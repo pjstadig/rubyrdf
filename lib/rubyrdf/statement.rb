@@ -7,10 +7,8 @@ module RubyRDF
     def initialize(subject, predicate, object)
       @subject = if subject.respond_to?(:to_uri)
                    subject.to_uri
-                 elsif subject.is_a?(BNode)
-                   subject
                  else
-                   raise InvalidStatementError, "#{subject} is not a valid subject"
+                   subject
                  end
 
       @predicate = if predicate.respond_to?(:to_uri)
@@ -21,12 +19,10 @@ module RubyRDF
 
       @object = if object.respond_to?(:to_uri)
                   object.to_uri
-                elsif object.is_a?(BNode)
-                  object
                 elsif object.respond_to?(:to_literal)
                   object.to_literal
                 else
-                  raise InvalidStatementError, "#{object} is not a valid object"
+                  object
                 end
     end
 

@@ -59,7 +59,7 @@ describe RubyRDF::Sesame do
     @graph.add(ex::d, ex::b, RubyRDF::PlainLiteral.new('test', 'en'))
     @graph.add(ex::d, ex::b, RubyRDF::TypedLiteral.new('test', ex::a))
     @graph.add(ex::d, ex::b, ex::e)
-    @graph.add(ex::d, ex::b, RubyRDF::BNode.new)
+    @graph.add(ex::d, ex::b, Object.new)
 
     result = @graph.select("SELECT ?y WHERE {?x <#{ex::b}> ?y . }")
     result.size.should == 5
@@ -67,7 +67,7 @@ describe RubyRDF::Sesame do
     result.any?{|r| r['y'] == RubyRDF::PlainLiteral.new('test', 'en')}.should be_true
     result.any?{|r| r['y'] == RubyRDF::TypedLiteral.new('test', ex::a)}.should be_true
     result.any?{|r| r['y'] == ex::e}.should be_true
-    result.any?{|r| r['y'].is_a?(RubyRDF::BNode)}.should be_true
+    result.any?{|r| @graph.bnode?(r['y']) }.should be_true
   end
 
   it "should execute SPARQL select query with empty result" do
@@ -93,7 +93,7 @@ describe RubyRDF::Sesame do
 
   it "should commit a transaction" do
     stmt1 = RubyRDF::Statement.new(ex::sub, ex::pred1, RubyRDF::PlainLiteral.new('plainLiteral', 'en'))
-    stmt2 = RubyRDF::Statement.new(RubyRDF::BNode.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
+    stmt2 = RubyRDF::Statement.new(Object.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
     @graph.add(stmt1)
     @graph.transaction do |t|
       t.add(stmt2)
@@ -106,7 +106,7 @@ describe RubyRDF::Sesame do
 
   it "should commit in the middle of a transaction" do
     stmt1 = RubyRDF::Statement.new(ex::sub, ex::pred1, RubyRDF::PlainLiteral.new('plainLiteral', 'en'))
-    stmt2 = RubyRDF::Statement.new(RubyRDF::BNode.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
+    stmt2 = RubyRDF::Statement.new(Object.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
     @graph.add(stmt1)
     @graph.transaction do |t|
       t.add(stmt2)
@@ -126,7 +126,7 @@ describe RubyRDF::Sesame do
 
   it "should rollback a transaction" do
     stmt1 = RubyRDF::Statement.new(ex::sub, ex::pred1, RubyRDF::PlainLiteral.new('plainLiteral', 'en'))
-    stmt2 = RubyRDF::Statement.new(RubyRDF::BNode.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
+    stmt2 = RubyRDF::Statement.new(Object.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
     @graph.add(stmt1)
     @graph.transaction do |t|
       t.add(stmt2)
@@ -140,7 +140,7 @@ describe RubyRDF::Sesame do
 
   it "should rollback a transaction on an error" do
     stmt1 = RubyRDF::Statement.new(ex::sub, ex::pred1, RubyRDF::PlainLiteral.new('plainLiteral', 'en'))
-    stmt2 = RubyRDF::Statement.new(RubyRDF::BNode.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
+    stmt2 = RubyRDF::Statement.new(Object.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
     @graph.add(stmt1)
     begin
       @graph.transaction do |t|
@@ -158,7 +158,7 @@ describe RubyRDF::Sesame do
 
   it "should rollback in the middle of a transaction" do
     stmt1 = RubyRDF::Statement.new(ex::sub, ex::pred1, RubyRDF::PlainLiteral.new('plainLiteral', 'en'))
-    stmt2 = RubyRDF::Statement.new(RubyRDF::BNode.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
+    stmt2 = RubyRDF::Statement.new(Object.new, ex::pred2, RubyRDF::TypedLiteral.new('plainLiteral', ex::datatype))
     @graph.add(stmt1)
     @graph.transaction do |t|
       t.add(stmt2)

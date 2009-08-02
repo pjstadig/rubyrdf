@@ -117,7 +117,7 @@ module RubyRDF
       when PlainLiteral
         %Q("#{node.lexical_form}") +
           (node.language_tag ? "@#{node.language_tag}" : "")
-      when BNode
+      else
         "_:bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
       end
     end
@@ -174,7 +174,7 @@ module RubyRDF
     def transaction_xml_node(b, node, bnodes)
       if node.is_a?(Addressable::URI)
         b.uri(node.to_s)
-      elsif node.is_a?(BNode)
+      elsif bnode?(node)
         b.bnode(bnodes[node] ||= generate_bnode_name)
       elsif node.is_a?(TypedLiteral)
         b.literal(node.lexical_form, :datatype => node.datatype_uri)

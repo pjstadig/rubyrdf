@@ -31,7 +31,7 @@ module RubyRDF
       when 'uri'
         Addressable::URI.parse(node.text)
       when 'bnode'
-        bnodes[node.text] ||= RubyRDF::BNode.new
+        bnodes[node.text] ||= Object.new
       when 'literal'
         if node.attributes.include?('datatype')
           RubyRDF::TypedLiteral.new(node.text, node.attributes['datatype'])

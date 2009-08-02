@@ -10,18 +10,6 @@ describe RubyRDF::Statement do
   end
 
   describe "#initialize" do
-    it "should raise InvalidStatementError with literal subject" do
-      lambda{
-        RubyRDF::Statement.new(2.to_literal, rdf::type, rdf::Property)
-      }.should raise_error(RubyRDF::InvalidStatementError)
-    end
-
-    it "should raise InvalidStatementError with non-node subject" do
-      lambda {
-        RubyRDF::Statement.new(Object.new, rdf::type, rdf::Property)
-      }.should raise_error(RubyRDF::InvalidStatementError)
-    end
-
     it "should raise InvalidStatementError with literal predicate" do
       lambda {
         RubyRDF::Statement.new(rdf::subject, 2.to_literal, rdf::Property)
@@ -30,19 +18,7 @@ describe RubyRDF::Statement do
 
     it "should raise InvalidStatementError with blank node predicate" do
       lambda {
-        RubyRDF::Statement.new(rdf::subject, RubyRDF::BNode.new, rdf::Property)
-      }.should raise_error(RubyRDF::InvalidStatementError)
-    end
-
-    it "should raise InvalidStatementError with non-node predicate" do
-      lambda {
         RubyRDF::Statement.new(rdf::subject, Object.new, rdf::Property)
-      }.should raise_error(RubyRDF::InvalidStatementError)
-    end
-
-    it "should raise InvalidStatementError with non-node object" do
-      lambda {
-        RubyRDF::Statement.new(rdf::subject, rdf::type, Object.new)
       }.should raise_error(RubyRDF::InvalidStatementError)
     end
 
