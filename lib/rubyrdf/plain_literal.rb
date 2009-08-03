@@ -1,4 +1,5 @@
 module RubyRDF
+  # An RDF plain literal.
   class PlainLiteral
     attr_reader :lexical_form
     attr_reader :language_tag
@@ -8,7 +9,7 @@ module RubyRDF
       @language_tag = language_tag
     end
 
-    def ==(o)
+    def ==(o) #:nodoc:
       @lexical_form == o.lexical_form &&
         @language_tag == o.language_tag
     rescue NoMethodError
@@ -16,10 +17,11 @@ module RubyRDF
     end
     alias_method(:eql?, :==)
 
-    def hash
+    def hash #:nodoc:
       [-584159468, @lexical_form, @language_tag].hash
     end
 
+    # Returns self
     def to_literal
       self
     end

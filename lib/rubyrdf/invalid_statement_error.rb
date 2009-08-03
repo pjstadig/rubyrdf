@@ -1,5 +1,5 @@
 module RubyRDF
-  # Raised when an invalid statement is constructed.
+  # Raised when an attempt is made to construct an invalid statement.
   class InvalidStatementError < Error
   end
 end
