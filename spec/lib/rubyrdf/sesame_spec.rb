@@ -12,8 +12,8 @@ describe RubyRDF::Sesame do
   end
 
   describe 'initialize' do
-    it "should assign address" do
-      @graph.address.should == 'localhost'
+    it "should assign host" do
+      @graph.host.should == 'localhost'
     end
 
     it "should assign port" do
@@ -27,6 +27,10 @@ describe RubyRDF::Sesame do
     it "should assign repository" do
       @graph.repository.should == 'test'
     end
+  end
+
+  it "should be writable" do
+    @graph.should be_writable
   end
 
   it "should be empty" do

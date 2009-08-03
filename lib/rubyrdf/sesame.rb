@@ -1,29 +1,31 @@
-require 'uri'
 require 'net/http'
 
-# TODO use Addressable instead of URI
 module RubyRDF
   class Sesame < Graph
-    attr_reader :address, :port, :path, :repository
+    attr_reader :host, :port, :path, :repository
 
-    def initialize(uri, repository)
-      uri = URI.parse(uri)
-      @address = uri.host
+    def initialize(uri, repository) #:nodoc:
+      uri = Addressable::URI.parse(uri)
+      @host = uri.host
       @port = uri.port
       @path = uri.path
       @repository = repository
       @transactions = []
     end
 
-    def size
+    def writable? #:nodoc:
+      true
+    end
+
+    def size #:nodoc:
       get_request(repo_path('size')).to_i
     end
 
-    def empty?
+    def empty? #:nodoc:
       size == 0
     end
 
-    def add(*statement)
+    def add(*statement) #:nodoc:
       if @transactions.any?
         @transactions.last << [:add, statement.to_statement]
       else
@@ -31,7 +33,7 @@ module RubyRDF
       end
     end
 
-    def import(data, format = :ntriples)
+    def import(data, format = :ntriples) #:nodoc:
       headers = case format
       when :ntriples
         {'Content-Type' => 'text/plain; charset=utf-8'}
@@ -43,7 +45,7 @@ module RubyRDF
       result
     end
 
-    def delete(*statement)
+    def delete(*statement) #:nodoc:
       if @transactions.any?
         @transactions.last << [:delete, statement.to_statement]
       else
@@ -51,7 +53,7 @@ module RubyRDF
       end
     end
 
-    def delete_all
+    def delete_all #:nodoc:
       if @transactions.any?
         @transactions.last << [:delete_all, statement.to_statement]
       else
@@ -59,19 +61,19 @@ module RubyRDF
       end
     end
 
-    def select(query)
+    def select(query) #:nodoc:
       SparqlResult.new(get_request(repo_path, {"query" => query}, "Accept" => "application/sparql-results+xml"))
     end
 
-    def ask(query)
+    def ask(query) #:nodoc:
       get_request(repo_path, {"query" => query}, "Accept" => "text/boolean") == "true"
     end
 
-    def include?(*statement)
+    def include?(*statement) #:nodoc:
       ask("ASK { #{statement.to_statement.to_ntriples} }")
     end
 
-    def transaction
+    def transaction #:nodoc:
       @transactions << []
       yield self
       _commit(@transactions.pop)
@@ -80,13 +82,13 @@ module RubyRDF
       throw e
     end
 
-    def rollback
+    def rollback #:nodoc:
       @transactions.pop
       @transactions << []
       true
     end
 
-    def commit
+    def commit #:nodoc:
       _commit(@transactions.pop)
       @transactions << []
       true
@@ -123,7 +125,7 @@ module RubyRDF
     end
 
     def get_request(path, params = {}, headers = {})
-      Net::HTTP.start(@address, @port) do |http|
+      Net::HTTP.start(@host, @port) do |http|
         http.get(
           format_uri(path, params),
           headers).body
@@ -131,7 +133,7 @@ module RubyRDF
     end
 
     def post_request(path, data, params = {}, headers = {})
-      Net::HTTP.start(@address, @port) do |http|
+      Net::HTTP.start(@host, @port) do |http|
         http.open_timeout = 6000
         http.read_timeout = 6000
         http.post(format_uri(path, params), data, headers).body
@@ -139,7 +141,7 @@ module RubyRDF
     end
 
     def delete_request(path, params = {}, headers = {})
-      Net::HTTP.start(@address, @port) do |http|
+      Net::HTTP.start(@host, @port) do |http|
         http.delete(format_uri(path, params), headers).body
       end
     end
