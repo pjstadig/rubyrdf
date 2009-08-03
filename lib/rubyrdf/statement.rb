@@ -1,4 +1,6 @@
 module RubyRDF
+  #--
+  # TODO nodoc
   class Statement
     attr_reader :subject
     attr_reader :predicate

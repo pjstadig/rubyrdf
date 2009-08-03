@@ -2,6 +2,8 @@ require 'digest/md5'
 
 module RubyRDF
   # An in-memory graph implementation.
+  #--
+  # TODO Add imports/exports
   class MemoryGraph < Graph
     # Initializes the graph and adds +statements+ to it, if they are given.
     def initialize(*statements)

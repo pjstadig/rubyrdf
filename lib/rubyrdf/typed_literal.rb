@@ -1,4 +1,7 @@
 module RubyRDF
+  #--
+  # TODO to_s
+  # TODO inspect
   class TypedLiteral
     attr_reader :lexical_form
     attr_reader :datatype_uri
@@ -12,7 +15,7 @@ module RubyRDF
                       end
     end
 
-    def ==(o)
+    def ==(o) #:nodoc:
       @lexical_form == o.lexical_form &&
         @datatype_uri == o.datatype_uri
     rescue NoMethodError
@@ -20,10 +23,11 @@ module RubyRDF
     end
     alias_method(:eql?, :==)
 
-    def hash
+    def hash #:nodoc:
       [24515434, @lexical_form, @datatype_uri].hash
     end
 
+    # Returns self
     def to_literal
       self
     end

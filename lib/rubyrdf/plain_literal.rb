@@ -1,5 +1,8 @@
 module RubyRDF
   # An RDF plain literal.
+  #--
+  # TODO to_s
+  # TODO inspect
   class PlainLiteral
     attr_reader :lexical_form
     attr_reader :language_tag
