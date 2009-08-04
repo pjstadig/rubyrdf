@@ -47,15 +47,6 @@ module RubyRDF
       unindex_statement(statement.to_statement)
     end
 
-    #--
-    # TODO remove this and use export instead
-    def to_ntriples
-      bnodes = {}
-      @statements.map do |s|
-        statement_to_ntriples(s, bnodes)
-      end.join("\n")
-    end
-
     private
     def reset_index
       @statements = Set.new

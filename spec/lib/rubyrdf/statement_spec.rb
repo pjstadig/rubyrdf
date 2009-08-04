@@ -93,7 +93,7 @@ describe RubyRDF::Statement do
 
   describe "to_ntriples" do
     it "should return an NTriples export" do
-      @it.to_ntriples.should == "<#{rdf::subject}> <#{rdf::type}> <#{rdf::Property}>."
+      @it.to_ntriples.should == "<#{rdf::subject}> <#{rdf::type}> <#{rdf::Property}>.\n"
     end
   end
 end

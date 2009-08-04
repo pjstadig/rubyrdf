@@ -31,6 +31,44 @@ describe RubyRDF::Graph do
     end
   end
 
+  describe "export" do
+    it "should default to ntriples" do
+      RubyRDF::Export::NTriples.should_receive(:new).
+        with(@it, an_instance_of(StringIO)).
+        and_return(ntriples = mock("ntriples"))
+      ntriples.should_receive(:export)
+      @it.export
+    end
+
+    it "should raise UnknownFormat error" do
+      lambda{
+        @it.export(:bogus)
+      }.should raise_error(RubyRDF::Export::UnknownFormatError)
+    end
+
+    it "should default to NTriples" do
+      RubyRDF::Export::NTriples.should_receive(:new).
+        with(@it, an_instance_of(StringIO)).
+        and_return(ntriples = mock("ntriples"))
+      ntriples.should_receive(:export)
+      @it.export
+    end
+  end
+
+  describe "export with io" do
+    it "should be nil" do
+      @it.should_receive(:each).and_yield(RubyRDF::Statement.new(ex::a, ex::b, ex::c))
+      @it.export(:ntriples, StringIO.new).should be_nil
+    end
+
+    it "should call puts on io" do
+      @it.should_receive(:each).and_yield(RubyRDF::Statement.new(ex::a, ex::b, ex::c))
+      io = mock("io")
+      io.should_receive(:puts).with("<#{ex::a}> <#{ex::b}> <#{ex::c}>.")
+      @it.export(:ntriples, io).should be_nil
+    end
+  end
+
   describe 'variable?' do
     it 'should be true for a symbol' do
       @it.variable?(:x).should be_true

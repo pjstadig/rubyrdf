@@ -55,7 +55,7 @@ module RubyRDF
     end
 
     def to_ntriples
-      MemoryGraph.new(self).to_ntriples
+      MemoryGraph.new(self).export
     end
   end
 end

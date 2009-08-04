@@ -57,9 +57,26 @@ module RubyRDF
     # Exports the graph to +io+ in the specified +format+. Valid values for +format+ are:
     # * :ntriples
     # * :rdfxml
-    #--
-    # TODO change signature to take format first and default io to a StringIO
-    def export(io, format = :ntriples); raise NotImplementedError end
+    #
+    # If no +io+ is given, then a StringIO will be used, and the exported graph will be
+    # returned.  Otherwise, +nil+ is returned.
+    def export(format = nil, io = nil)
+      format ||= :ntriples
+
+      string_io = io.nil?
+      io ||= StringIO.new
+
+      case format
+      when :ntriples
+        Export::NTriples.new(self, io).export
+      else
+        raise Export::UnknownFormatError
+      end
+
+      if string_io
+        io.string
+      end
+    end
 
     #--
     # TODO document
