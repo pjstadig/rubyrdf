@@ -76,11 +76,20 @@ describe RubyRDF::PlainLiteral, "with language_tag" do
     it "should assign language_tag" do
       @it.language_tag.should == @language_tag
     end
+
+    it "should normalize language_tag" do
+      RubyRDF::PlainLiteral.new(@lexical_form, @language_tag.upcase).language_tag.should ==
+        @language_tag.downcase
+    end
   end
 
   describe "==" do
     it "should equal with the same lexical_form and language_tag" do
       @it.should == RubyRDF::PlainLiteral.new(@lexical_form, @language_tag)
+    end
+
+    it "should equal with the same lexical_form and language_tag of different case" do
+      @it.should == RubyRDF::PlainLiteral.new(@lexical_form, @language_tag.upcase)
     end
 
     it "should not equal with the same lexical_form and no language_tag" do
@@ -99,6 +108,10 @@ describe RubyRDF::PlainLiteral, "with language_tag" do
   describe "hash" do
     it "should be equal with the same lexical_form and language_tag" do
       @it.hash.should == RubyRDF::PlainLiteral.new(@lexical_form, @language_tag).hash
+    end
+
+    it "should be equal with the same lexical_form and language_tag of different case" do
+      @it.hash.should == RubyRDF::PlainLiteral.new(@lexical_form, @language_tag.upcase).hash
     end
 
     it "should not be equal with the same lexical_form and no language_tag" do

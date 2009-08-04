@@ -5,6 +5,10 @@ describe RubyRDF::Export::NTriples do
     RubyRDF::Namespaces.ex
   end
 
+  def xsd
+    RubyRDF::Namespaces.xsd
+  end
+
   before do
     RubyRDF::Namespaces.register(:ex => "http://example.com/")
     @graph = RubyRDF::MemoryGraph.new()
@@ -44,7 +48,7 @@ describe RubyRDF::Export::NTriples do
     it "should export TypedLiteral" do
       @it.should_receive(:escape_string).with("2").and_return("2")
       @it.export_node(2.to_literal).should ==
-        %Q("2"^^<#{RubyRDF::Namespaces.xsd::integer}>)
+        %Q("2"^^<#{xsd::integer}>)
     end
   end
 
@@ -122,20 +126,20 @@ describe RubyRDF::Export::NTriples do
     end
 
     it "should encode 0xFFFF" do
-      @it.escape_string("\357\277\277").should == "\\uFFFF"
+      @it.escape_string([0xFFFF].pack("U")).should == "\\uFFFF"
     end
 
     it "should encode 0x10000" do
-      @it.escape_string("\360\220\200\200").should == "\\U00010000"
+      @it.escape_string([0x10000].pack("U")).should == "\\U00010000"
     end
 
     it "should encode 0x10FFFF" do
-      @it.escape_string("\364\217\277\277").should == "\\U0010FFFF"
+      @it.escape_string([0x10FFFF].pack("U")).should == "\\U0010FFFF"
     end
 
     it "should raise invalid character" do
       lambda {
-        @it.escape_string("\364\220\200\200")
+        @it.escape_string([0x110000].pack("U"))
       }.should raise_error(RubyRDF::Export::NTriples::InvalidCharacter)
     end
   end
