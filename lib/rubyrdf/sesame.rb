@@ -35,11 +35,11 @@ module RubyRDF
 
     def import(data, format = :ntriples) #:nodoc:
       headers = case format
-      when :ntriples
-        {'Content-Type' => 'text/plain; charset=utf-8'}
-      when :rdfxml
-        {'Content-Type' => 'application/rdf+xml; charset=utf-8'}
-      end
+                when :ntriples
+                  {'Content-Type' => 'text/plain; charset=utf-8'}
+                when :rdfxml
+                  {'Content-Type' => 'application/rdf+xml; charset=utf-8'}
+                end
 
       result = post_request(repo_path("statements"), data, {}, headers)
       result

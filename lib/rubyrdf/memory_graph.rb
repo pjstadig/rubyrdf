@@ -16,53 +16,40 @@ module RubyRDF
       true
     end
 
-    # Yields each statement to the block.
-    def each(&b)
+    def each(&b) #:nodoc:
       @statements.each(&b)
     end
 
-    # Performs a match against a statement fragment, where blank nodes that do not appear in the
-    # graph, symbols, and nils are considered variables.
-    #
-    # See Graph#subgraph for more information.
-    def subgraph(*statement)
+    def subgraph(*statement) #:nodoc:
       subject, predicate, object = statement.to_triple.map{|x| x || Object.new}
       MemoryGraph.new(*find_statements(subject, predicate, object))
     rescue InvalidStatementError
       MemoryGraph.new
     end
 
-    # True if the graph contains +statement+, false otherwise.
-    def include?(*statement)
+    def include?(*statement) #:nodoc:
       @statements.include?(statement.to_statement)
     end
 
-    # Returns the number of statements in the graph.
-    def size
+    def size #:nodoc:
       @statements.size
     end
 
-    # True if +bnode+ is contained in at least one statement in the graph, false otherwise.
-    def known?(bnode)
+    def known?(bnode) #:nodoc:
       @bnodes[bnode] > 0
     end
 
-    # Adds +statement+ to the graph.
-    #
-    # Returns true if the statement was added, false if it was already in the graph.
-    def add(*statement)
+    def add(*statement) #:nodoc:
       index_statement(statement.to_statement)
     end
 
-    # Deletes +statement+ from the graph.
-    #
-    # Returns true if the statement was deleted, false if it was already not in the graph.
-    def delete(*statement)
+    def delete(*statement) #:nodoc:
       unindex_statement(statement.to_statement)
     end
 
+    #--
+    # TODO remove this and use export instead
     def to_ntriples
-      # TODO this should use the export function
       bnodes = {}
       @statements.map do |s|
         statement_to_ntriples(s, bnodes)
@@ -169,10 +156,14 @@ module RubyRDF
       end.to_a
     end
 
+    #--
+    # TODO remove this and use export instead
     def statement_to_ntriples(statement, bnodes)
       statement.to_triple.map{|n| node_to_ntriples(n, bnodes)}.join(" ") + "."
     end
 
+    #--
+    # TODO remove this and use export instead
     def node_to_ntriples(node, bnodes)
       case node
       when Addressable::URI
@@ -188,6 +179,8 @@ module RubyRDF
       end
     end
 
+    #--
+    # TODO remove this and use export instead
     def generate_bnode_name
       "bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
     end

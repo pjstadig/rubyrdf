@@ -6,6 +6,9 @@ module RubyRDF
   #   :rdfs => "http://www.w3.org/2000/01/rdf-schema#"
   #   :owl  => "http://www.w3.org/2002/07/owl#"
   #   :dc   => "http://purl.org/dc/elements/1.1/"
+  #--
+  # TODO remove this and use Namespace objects instead, I don't like the global prefix names.
+  # TODO however, keep quick access to the most common namespaces
   module Namespaces
     # Registers each namespace in the +namespaces+ hash.  Creates a class method and an instance
     # method for each prefix.  The methods return an anonymous Module that generates URIs from its

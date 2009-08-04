@@ -2,6 +2,13 @@ module RubyRDF
   # The abstract base class for all graph implementations.  This defines the common interface for
   # graphs.  Implementations are free to extend this interface as long as the core, common
   # interface is implemented as specified here.
+  #--
+  # TODO transaction support
+  # TODO SPARQL support
+  # TODO Ruby query support
+  # TODO _add and _delete
+  # TODO should keep import because some graphs have efficient imports (like Sesame)...figure something out
+  # TODO perhaps have a default import that may be slow, and allow subclasses to override
   class Graph
     # True if this graph is writable, false otherwise.
     def writable?; false end
@@ -30,6 +37,8 @@ module RubyRDF
     #
     # Returns graph of statements matching the fragment.
     # Returns an empty graph if +statement+ results in no matches, or if +statement+ is invalid.
+    #--
+    # TODO rename...filter?, match?
     def subgraph(*statement); raise NotImplementedError end
 
     # True if the graph contains the statement, false otherwise.
@@ -46,8 +55,12 @@ module RubyRDF
     # Exports the graph to +io+ in the specified +format+. Valid values for +format+ are:
     # * :ntriples
     # * :rdfxml
+    #--
+    # TODO change signature to take format first and default io to a StringIO
     def export(io, format = :ntriples); raise NotImplementedError end
 
+    #--
+    # TODO document
     def unreify(node); raise NotImplementedError end
 
     # True if +bnode+ is contained in at least one statement in the graph, false otherwise.
@@ -95,6 +108,8 @@ module RubyRDF
       true
     end
 
+    #--
+    # TODO document reify
     def reify(*statement); writable!; raise NotImplementedError end
 
     # Adds +statements+ to the graph, replacing any occurrences of blank nodes with new blank nodes.
@@ -116,14 +131,20 @@ module RubyRDF
       end
     end
 
+    #--
+    # TODO document or make private
     def uri?(node)
       node.is_a?(Addressable::URI)
     end
 
+    #--
+    # TODO document or make private
     def literal?(node)
       node.is_a?(PlainLiteral) || node.is_a?(TypedLiteral)
     end
 
+    #--
+    # TODO document or make private
     def bnode?(node)
       !uri?(node) && !literal?(node)
     end

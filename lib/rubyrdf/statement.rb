@@ -1,6 +1,7 @@
 module RubyRDF
   #--
   # TODO nodoc
+  # TODO move InvalidStatement to here?
   class Statement
     attr_reader :subject
     attr_reader :predicate
