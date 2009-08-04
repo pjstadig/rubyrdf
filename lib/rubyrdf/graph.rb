@@ -44,6 +44,8 @@ module RubyRDF
     # True if the graph contains the statement, false otherwise.
     #
     # Raises InvalidStatementError, if +statement+ is invalid.
+    #--
+    # TODO implement in terms of subgraph
     def include?(*statement); raise NotImplementedError end
 
     # Returns the number of statements in the graph.

@@ -1,4 +1,6 @@
 module RubyRDF
+  #--
+  # TODO turn this into an URIGraph
   module NTriplesIO
     def self.included(base)
       base.send(:include, InstanceMethods)
