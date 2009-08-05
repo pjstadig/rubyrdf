@@ -32,14 +32,6 @@ describe RubyRDF::Graph do
   end
 
   describe "export" do
-    it "should default to ntriples" do
-      RubyRDF::Writer::NTriples.should_receive(:new).
-        with(@it, an_instance_of(StringIO)).
-        and_return(ntriples = mock("ntriples"))
-      ntriples.should_receive(:export)
-      @it.export
-    end
-
     it "should raise UnknownFormat error" do
       lambda{
         @it.export(:bogus)
@@ -48,9 +40,8 @@ describe RubyRDF::Graph do
 
     it "should default to NTriples" do
       RubyRDF::Writer::NTriples.should_receive(:new).
-        with(@it, an_instance_of(StringIO)).
-        and_return(ntriples = mock("ntriples"))
-      ntriples.should_receive(:export)
+        with(@it).and_return(ntriples = mock("ntriples"))
+      ntriples.should_receive(:export).with(an_instance_of(StringIO))
       @it.export
     end
   end

@@ -12,8 +12,7 @@ describe RubyRDF::Writer::NTriples do
   before do
     RubyRDF::Namespaces.register(:ex => "http://example.com/")
     @graph = RubyRDF::MemoryGraph.new()
-    @io = StringIO.new
-    @it = RubyRDF::Writer::NTriples.new(@graph, @io)
+    @it = RubyRDF::Writer::NTriples.new(@graph)
   end
 
   describe "export_node" do

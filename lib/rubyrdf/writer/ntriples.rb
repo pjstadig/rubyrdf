@@ -6,15 +6,13 @@ module RubyRDF
       class InvalidCharacter < RubyRDF::Error; end
 
       attr_reader :graph
-      attr_reader :io
 
-      def initialize(graph, io)
+      def initialize(graph)
         @graph = graph
-        @io = io
         @bnodes = {}
       end
 
-      def export
+      def export(io)
         graph.each{|s| io.puts(export_statement(s))}
       end
 
