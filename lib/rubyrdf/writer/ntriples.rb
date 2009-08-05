@@ -1,7 +1,7 @@
 require 'digest/md5'
 
 module RubyRDF
-  module Export
+  module Writer
     class NTriples
       class InvalidCharacter < RubyRDF::Error; end
 

@@ -68,9 +68,9 @@ module RubyRDF
 
       case format
       when :ntriples
-        Export::NTriples.new(self, io).export
+        Writer::NTriples.new(self, io).export
       else
-        raise Export::UnknownFormatError
+        raise Writer::UnknownFormatError
       end
 
       if string_io

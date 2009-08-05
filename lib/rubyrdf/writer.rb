@@ -1,5 +1,5 @@
 module RubyRDF
-  module Export
+  module Writer
     class UnknownFormatError < RubyRDF::Error; end
   end
 end
