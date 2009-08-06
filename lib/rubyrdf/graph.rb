@@ -10,49 +10,116 @@ module RubyRDF
   # TODO should keep import because some graphs have efficient imports (like Sesame)...figure something out
   # TODO perhaps have a default import that may be slow, and allow subclasses to override
   class Graph
-    # True if this graph is writable, false otherwise.
-    def writable?; false end
+    include Enumerable
 
-    # Raises NotWritableError, if this graph is not writable, returns nil otherwise.
-    def writable!; raise NotWritableError unless writable? end
+    # Returns true if +node+ is an URI, false otherwise.
+    def uri?(node)
+      node.is_a?(Addressable::URI)
+    end
 
-    # Yields each statement to the block.
-    def each(&b); raise NotImplementedError end
+    # Returns true if +node+ is a literal (plain or typed), false otherwise.
+    def literal?(node)
+      node.is_a?(PlainLiteral) || node.is_a?(TypedLiteral)
+    end
 
-    # Performs a match against a statement fragment, where blank nodes that do not appear in the
-    # graph, symbols, and nils are considered variables.
+    # Returns true if +node+ is a blank node, false otherwise.
+    def bnode?(node)
+      !uri?(node) && !literal?(node)
+    end
+
+    # Yields each statement to the given block
+    def each; raise NotImplementedError end
+
+    # Adds +statement+ to the graph.
     #
-    # Blank nodes and symbols will be bound on their first occurrence, and must match that binding
-    # on subsequent occurrences.  For example,
-    #   g.subgraph(:a, :a, :b)
+    # Returns true, if the statement was added, false if it was already in the graph.
+    #
+    # Raises NotWritableError, if the graph is not writable.
+    # Raises InvalidStatementError, if +statement+ is invalid.
+    def add(*statement); writable!; raise NotImplementedError end
+    alias_method :<<, :add
+
+    # Deletes +statement+ from the graph.
+    #
+    # Returns true, if the statement was deleted, false if it was not in the graph.
+    #
+    # Raises NotWritableError, if the graph is not writable.
+    # Raises InvalidStatementError, if +statement+ is invalid.
+    def delete(*statement); writable!; raise NotImplementedError end
+
+    # True if +bnode+ is contained in at least one statement in the graph, false otherwise.
+    def known?(bnode)
+      if bnode?(bnode)
+        each{|s| return true if s.subject == bnode || s.object == bnode}
+      end
+      false
+    end
+
+    # Performs a match against the given statement +fragment+, where blank nodes that do not appear
+    # in the graph, and nils are considered variables.
+    #
+    # Variables will be bound on their first occurrence, and must match that binding on subsequent
+    # occurrences.  For example,
+    #   g.match(:a, :a, :b)
     # will match
     #   <http://example.com/one> <http://example.com/one> <http://example.com/three> .
     # but will not match
     #   <http://example.com/one> <http://example.com/two> <http://example.com/three> .
     #
     # Any nils will be replaced with new blank nodes, so that
-    #   g.subgraph(nil, nil, nil)
+    #   g.match(nil, nil, nil)
     # is equivalent to
-    #   g.subgraph(RubyRDF::BlankNode.new, RubyRDF::BlankNode.new, RubyRDF::BlankNode.new)
+    #   g.mach(Object.new, Object.new, Object.new)
     #
-    # Returns graph of statements matching the fragment.
-    # Returns an empty graph if +statement+ results in no matches, or if +statement+ is invalid.
-    #--
-    # TODO rename...filter?, match?
-    def subgraph(*statement); raise NotImplementedError end
+    # Yields each matched statement to the given block, or if no block is given, then returns a
+    # graph containing all of the matched statements.
+    def match(*fragment)
+      statements = MemoryGraph.new
+      begin
+        sub, pred, obj = fragment.to_triple.map{|x| x || Object.new}
+        each do |s|
+          bindings = {}
+          if bnode?(sub)
+            bindings[sub] = s.subject
+          end
 
-    # True if the graph contains the statement, false otherwise.
-    #
-    # Raises InvalidStatementError, if +statement+ is invalid.
-    #--
-    # TODO implement in terms of subgraph
-    def include?(*statement); raise NotImplementedError end
+          if bnode?(pred) && !bindings[pred]
+            bindings[pred] = s.predicate
+          end
+
+          if bnode?(obj) && !bindings[obj]
+            bindings[obj] = s.object
+          end
+
+          if (bindings[sub] || sub) == s.subject &&
+              (bindings[pred] || pred) == s.predicate &&
+              (bindings[obj] || obj) == s.object
+            if block_given?
+              yield s
+            else
+              statements.add(s)
+            end
+          end
+        end
+      rescue InvalidStatementError
+      end
+
+      if block_given?
+        nil
+      else
+        statements
+      end
+    end
 
     # Returns the number of statements in the graph.
-    def size; raise NotImplementedError end
+    def size
+      inject(0){|sum,s| sum += 1}
+    end
 
     # True if the graph is empty, false otherwise.
-    def empty?; size == 0 end
+    def empty?
+      size == 0
+    end
 
     # Exports the graph to +io+ in the specified +format+. Valid values for +format+ are:
     # * :ntriples
@@ -78,13 +145,6 @@ module RubyRDF
       end
     end
 
-    #--
-    # TODO document
-    def unreify(node); raise NotImplementedError end
-
-    # True if +bnode+ is contained in at least one statement in the graph, false otherwise.
-    def known?(bnode); raise NotImplementedError end
-
     # True if +node+ is a variable with respect to this graph, false otherwise.
     #
     # +node+ is a variable if it is a Symbol, or if it is a BNode that is unknown to this graph.
@@ -92,13 +152,11 @@ module RubyRDF
       node.is_a?(Symbol) || (bnode?(node) && !known?(node))
     end
 
-    # Adds +statement+ to the graph.
-    #
-    # Returns true, if the statement was added, false if it was already in the graph.
-    #
-    # Raises NotWritableError, if the graph is not writable.
-    # Raises InvalidStatementError, if +statement+ is invalid.
-    def add(*statement); writable!; raise NotImplementedError end
+    # True if this graph is writable, false otherwise.
+    def writable?; false end
+
+    # Raises NotWritableError, if this graph is not writable, returns nil otherwise.
+    def writable!; raise NotWritableError unless writable? end
 
     # Adds each statement from the +statements+ Enumerable object.
     #
@@ -107,14 +165,6 @@ module RubyRDF
     def add_all(*statements)
       statements.each{|s| add(*s)}
     end
-
-    # Deletes +statement+ from the graph.
-    #
-    # Returns true, if the statement was deleted, false if it was not in the graph.
-    #
-    # Raises NotWritableError, if the graph is not writable.
-    # Raises InvalidStatementError, if +statement+ is invalid.
-    def delete(*statement); writable!; raise NotImplementedError end
 
     # Deletes all statements from this graph.
     #
@@ -126,10 +176,31 @@ module RubyRDF
       each{|s| delete(s)}
       true
     end
+    alias_method :clear, :delete_all
 
     #--
     # TODO document reify
-    def reify(*statement); writable!; raise NotImplementedError end
+    def reify(*statement)
+      writable!
+      s = statement.to_statement
+      node = Object.new
+      add(node, Namespaces.rdf::type, Namespaces.rdf::Statement)
+      add(node, Namespaces.rdf::subject, s.subject)
+      add(node, Namespaces.rdf::predicate, s.predicate)
+      add(node, Namespaces.rdf::object, s.object)
+      node
+    end
+
+    #--
+    # TODO document
+    def unreify(node)
+      if known?(node)
+        match(node, Namespaces.rdf::subject, nil){|s| subject = s.object}
+        match(node, Namespaces.rdf::predicate, nil){|s| predicate = s.object}
+        match(node, Namespaces.rdf::object, nil){|s| object = s.object}
+        Statement.new(subject, predicate, object)
+      end
+    end
 
     # Adds +statements+ to the graph, replacing any occurrences of blank nodes with new blank nodes.
     #
@@ -151,21 +222,9 @@ module RubyRDF
     end
 
     #--
-    # TODO document or make private
-    def uri?(node)
-      node.is_a?(Addressable::URI)
-    end
-
-    #--
-    # TODO document or make private
-    def literal?(node)
-      node.is_a?(PlainLiteral) || node.is_a?(TypedLiteral)
-    end
-
-    #--
-    # TODO document or make private
-    def bnode?(node)
-      !uri?(node) && !literal?(node)
+    # TODO document
+    def generate_bnode_name
+      "bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
     end
   end
 end

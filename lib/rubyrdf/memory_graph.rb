@@ -20,7 +20,15 @@ module RubyRDF
       @statements.each(&b)
     end
 
-    def subgraph(*statement) #:nodoc:
+    def add(*statement) #:nodoc:
+      index_statement(statement.to_statement)
+    end
+
+    def delete(*statement) #:nodoc:
+      unindex_statement(statement.to_statement)
+    end
+
+    def match(*statement) #:nodoc:
       subject, predicate, object = statement.to_triple.map{|x| x || Object.new}
       MemoryGraph.new(*find_statements(subject, predicate, object))
     rescue InvalidStatementError
@@ -37,14 +45,6 @@ module RubyRDF
 
     def known?(bnode) #:nodoc:
       @bnodes[bnode] > 0
-    end
-
-    def add(*statement) #:nodoc:
-      index_statement(statement.to_statement)
-    end
-
-    def delete(*statement) #:nodoc:
-      unindex_statement(statement.to_statement)
     end
 
     private
@@ -145,35 +145,6 @@ module RubyRDF
       else
         []
       end.to_a
-    end
-
-    #--
-    # TODO remove this and use export instead
-    def statement_to_ntriples(statement, bnodes)
-      statement.to_triple.map{|n| node_to_ntriples(n, bnodes)}.join(" ") + "."
-    end
-
-    #--
-    # TODO remove this and use export instead
-    def node_to_ntriples(node, bnodes)
-      case node
-      when Addressable::URI
-        "<#{node}>"
-      when TypedLiteral
-        %Q("#{node.lexical_form}"^^<#{node.datatype_uri}>)
-      when PlainLiteral
-        %Q("#{node.lexical_form}") +
-          (node.language_tag ? "@#{node.language_tag}" : "")
-      else
-        bnodes[node] ||= generate_bnode_name
-        "_:#{bnodes[node]}"
-      end
-    end
-
-    #--
-    # TODO remove this and use export instead
-    def generate_bnode_name
-      "bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
     end
   end
 end

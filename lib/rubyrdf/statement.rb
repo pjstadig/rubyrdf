@@ -30,10 +30,11 @@ module RubyRDF
     end
 
     def ==(o)
-      @subject == o.subject &&
-        @predicate == o.predicate &&
-        @object == o.object
-    rescue NoMethodError
+      other = o.to_triple
+      @subject == other[0] &&
+        @predicate == other[1] &&
+        @object == other[2]
+    rescue NoMethodError, InvalidStatementError
       false
     end
     alias_method(:eql?, :==)

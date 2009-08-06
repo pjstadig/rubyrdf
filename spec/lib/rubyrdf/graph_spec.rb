@@ -10,6 +10,18 @@ describe RubyRDF::Graph do
     RubyRDF::Namespaces.ex
   end
 
+  it "should not be writable" do
+    @it.should_not be_writable
+  end
+
+  describe "writable!" do
+    it "should raise NotWritableError" do
+      lambda {
+        @it.writable!
+      }.should raise_error(RubyRDF::NotWritableError)
+    end
+  end
+
   describe 'add_all' do
     it 'should add all statements to graph' do
       @it.should_receive(:add).with(ex::a, ex::b, ex::c)

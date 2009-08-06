@@ -21,8 +21,16 @@ module RubyRDF
       get_request(repo_path('size')).to_i
     end
 
+    def known?(bnode) #:nodoc:
+      false
+    end
+
     def empty? #:nodoc:
       size == 0
+    end
+
+    # TODO implement
+    def each #:nodoc:
     end
 
     def add(*statement) #:nodoc:
@@ -30,6 +38,14 @@ module RubyRDF
         @transactions.last << [:add, statement.to_statement]
       else
         post_request(repo_path('statements'), statement.to_statement.to_ntriples, {}, 'Content-Type' => 'text/plain')
+      end
+    end
+
+    def delete(*statement) #:nodoc:
+      if @transactions.any?
+        @transactions.last << [:delete, statement.to_statement]
+      else
+        delete_request(repo_path('statements'), to_param_hash(statement.to_statement))
       end
     end
 
@@ -43,14 +59,6 @@ module RubyRDF
 
       result = post_request(repo_path("statements"), data, {}, headers)
       result
-    end
-
-    def delete(*statement) #:nodoc:
-      if @transactions.any?
-        @transactions.last << [:delete, statement.to_statement]
-      else
-        delete_request(repo_path('statements'), to_param_hash(statement.to_statement))
-      end
     end
 
     def delete_all #:nodoc:
@@ -73,7 +81,8 @@ module RubyRDF
       ask("ASK { #{statement.to_statement.to_ntriples} }")
     end
 
-    def transaction #:nodoc:
+    # Starts a transaction with Sesame
+    def transaction
       @transactions << []
       yield self
       _commit(@transactions.pop)
@@ -82,13 +91,15 @@ module RubyRDF
       throw e
     end
 
-    def rollback #:nodoc:
+    # Rolls back the current transaction
+    def rollback
       @transactions.pop
       @transactions << []
       true
     end
 
-    def commit #:nodoc:
+    # Commits the current transaction
+    def commit
       _commit(@transactions.pop)
       @transactions << []
       true
@@ -177,7 +188,7 @@ module RubyRDF
       if node.is_a?(Addressable::URI)
         b.uri(node.to_s)
       elsif bnode?(node)
-        b.bnode(bnodes[node] ||= generate_bnode_name)
+        b.bnode("_:" + (bnodes[node] ||= generate_bnode_name))
       elsif node.is_a?(TypedLiteral)
         b.literal(node.lexical_form, :datatype => node.datatype_uri)
       elsif node.is_a?(PlainLiteral)
@@ -188,10 +199,6 @@ module RubyRDF
 
         b.literal(node.lexical_form, attrs)
       end
-    end
-
-    def generate_bnode_name
-      "_:bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
     end
 
     def _commit(transaction)

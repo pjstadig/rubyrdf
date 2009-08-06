@@ -40,6 +40,10 @@ describe RubyRDF::Statement do
       @it.should == RubyRDF::Statement.new(rdf::subject, rdf::type, rdf::Property)
     end
 
+    it 'should be equal to triple with same subject, predicate, object' do
+      @it.should == [rdf::subject, rdf::type, rdf::Property]
+    end
+
     it 'should not be equal with same predicate and object but different subject' do
       @it.should_not == RubyRDF::Statement.new(rdf::different, rdf::type, rdf::Property)
     end
