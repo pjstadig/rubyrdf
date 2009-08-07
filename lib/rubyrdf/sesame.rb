@@ -18,7 +18,7 @@ module RubyRDF
     end
 
     def size #:nodoc:
-      get_request(repo_path('size')).to_i
+      get_request(repo_path('size')).read.to_i
     end
 
     def known?(bnode) #:nodoc:
@@ -29,16 +29,15 @@ module RubyRDF
       size == 0
     end
 
-    # TODO implement
     def each(&b) #:nodoc:
-      Reader::NTriples.new(StringIO.new(get_request(repo_path('statements'), {}, 'Accept' => 'text/plain'))).each(&b)
+      Reader::NTriples.new(get_request(repo_path('statements'), {}, 'Accept' => 'text/plain')).each(&b)
     end
 
     def add(*statement) #:nodoc:
       if @transactions.any?
         @transactions.last << [:add, statement.to_statement]
       else
-        post_request(repo_path('statements'), statement.to_statement.to_ntriples, {}, 'Content-Type' => 'text/plain')
+        post_request(repo_path('statements'), statement.to_statement.to_ntriples, {}, 'Content-Type' => 'text/plain').read
       end
     end
 
@@ -46,7 +45,7 @@ module RubyRDF
       if @transactions.any?
         @transactions.last << [:delete, statement.to_statement]
       else
-        delete_request(repo_path('statements'), to_param_hash(statement.to_statement))
+        delete_request(repo_path('statements'), to_param_hash(statement.to_statement)).read
       end
     end
 
@@ -58,15 +57,14 @@ module RubyRDF
                   {'Content-Type' => 'application/rdf+xml; charset=utf-8'}
                 end
 
-      result = post_request(repo_path("statements"), data, {}, headers)
-      result
+      post_request(repo_path("statements"), data, {}, headers).read
     end
 
     def delete_all #:nodoc:
       if @transactions.any?
         @transactions.last << [:delete_all, statement.to_statement]
       else
-        delete_request(repo_path("statements"))
+        delete_request(repo_path("statements")).read
       end
     end
 
@@ -75,7 +73,7 @@ module RubyRDF
     end
 
     def ask(query) #:nodoc:
-      get_request(repo_path, {"query" => query}, "Accept" => "text/boolean") == "true"
+      get_request(repo_path, {"query" => query}, "Accept" => "text/boolean").read == "true"
     end
 
     def include?(*statement) #:nodoc:
@@ -117,11 +115,13 @@ module RubyRDF
     end
 
     def to_param_hash(statement)
-      {:subj => node_to_ntriples(statement.subject),
-       :pred => node_to_ntriples(statement.predicate),
-       :obj => node_to_ntriples(statement.object)}
+      { :subj => node_to_ntriples(statement.subject),
+        :pred => node_to_ntriples(statement.predicate),
+        :obj => node_to_ntriples(statement.object)}
     end
 
+    #--
+    # TODO this needs to be removed, it is not properly encoding unicode characters
     def node_to_ntriples(node)
       case node
       when Addressable::URI
@@ -132,28 +132,49 @@ module RubyRDF
         %Q("#{node.lexical_form}") +
           (node.language_tag ? "@#{node.language_tag}" : "")
       else
-        "_:bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
+        "_:bn#{generate_bnode_name}"
       end
     end
 
     def get_request(path, params = {}, headers = {})
-      Net::HTTP.start(@host, @port) do |http|
-        http.get(format_uri(path, params), headers).body
+      io = HTTPResponseIO.new
+      Thread.start do
+        Net::HTTP.start(@host, @port) do |http|
+          http.get(format_uri(path, params), headers) do |segment|
+            io.append(segment)
+          end
+          io.eos = true
+        end
       end
+      io
     end
 
     def post_request(path, data, params = {}, headers = {})
-      Net::HTTP.start(@host, @port) do |http|
-        http.open_timeout = 6000
-        http.read_timeout = 6000
-        http.post(format_uri(path, params), data, headers).body
+      io = HTTPResponseIO.new
+      Thread.start do
+        Net::HTTP.start(@host, @port) do |http|
+          http.open_timeout = 6000
+          http.read_timeout = 6000
+          http.post(format_uri(path, params), data, headers) do |segment|
+            io.append(segment)
+          end
+          io.eos = true
+        end
       end
+      io
     end
 
     def delete_request(path, params = {}, headers = {})
-      Net::HTTP.start(@host, @port) do |http|
-        http.delete(format_uri(path, params), headers).body
+      io = HTTPResponseIO.new
+      Thread.start do
+        Net::HTTP.start(@host, @port) do |http|
+          http.delete(format_uri(path, params), headers) do |segment|
+            io.append(segment)
+          end
+          io.eos = true
+        end
       end
+      io
     end
 
     def to_transaction_xml(transaction)
@@ -202,9 +223,11 @@ module RubyRDF
 
     def _commit(transaction)
       doc = to_transaction_xml(transaction)
-      post_request(repo_path('statements'), doc, {}, 'Content-Type' => 'application/x-rdftransaction')
+      post_request(repo_path('statements'), doc, {}, 'Content-Type' => 'application/x-rdftransaction').read
     end
 
+    #--
+    # TODO use Addressable::URI instead URI?
     def format_uri(path, params = {})
       if params.empty?
         path

@@ -280,7 +280,7 @@ module RubyRDF
           value << consume
         end
 
-        if value.size <= 4
+        if value.size == 4
           [value.hex].pack('U')
         else
           raise SyntaxError, 'Expected no more than four hexadecimal characters'
@@ -293,7 +293,7 @@ module RubyRDF
           value << consume
         end
 
-        if value.size >= 5 && value.size <= 8
+        if value.size == 8
           [value.hex].pack('U')
         else
           raise SyntaxError, 'Expected between five and eight hexadecimal characters'
