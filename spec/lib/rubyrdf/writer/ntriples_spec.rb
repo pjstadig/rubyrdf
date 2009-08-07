@@ -20,6 +20,11 @@ describe RubyRDF::Writer::NTriples do
       @it.export_node(ex::resource).should == "<#{ex::resource}>"
     end
 
+    it "should encode URI" do
+      @it.should_receive(:escape_string).with(ex::resource.to_s).and_return(ex::resource.to_s)
+      @it.export_node(ex::resource).should == "<#{ex::resource}>"
+    end
+
     it "should export bnode" do
       @it.should_receive(:generate_bnode_name).and_return("name")
       @it.export_node(Object.new).should == "_:bnname"

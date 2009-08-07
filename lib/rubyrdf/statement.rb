@@ -44,7 +44,7 @@ module RubyRDF
     end
 
     def inspect
-      "#<#{self.class} #{subject} #{predicate} #{object}>"
+      "#<#{self.class} #{to_ntriples.strip.chomp('.')}>"
     end
 
     def to_statement

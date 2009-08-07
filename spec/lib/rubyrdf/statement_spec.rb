@@ -100,6 +100,12 @@ describe RubyRDF::Statement do
       @it.to_ntriples.should == "<#{rdf::subject}> <#{rdf::type}> <#{rdf::Property}>.\n"
     end
   end
+
+  describe "inspect" do
+    it "should use NTriples export" do
+      @it.inspect.should == "#<RubyRDF::Statement #{@it.to_ntriples.strip.chomp('.')}>"
+    end
+  end
 end
 
 describe "Array#to_statement" do

@@ -23,7 +23,7 @@ module RubyRDF
       def export_node(node)
         case node
         when Addressable::URI
-          "<#{node}>"
+          "<#{escape_string(node.to_s)}>"
         when PlainLiteral
           %Q("#{escape_string(node.lexical_form)}") +
             (node.language_tag ? "@#{node.language_tag}" : "")
