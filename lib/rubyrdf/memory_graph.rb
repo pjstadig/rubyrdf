@@ -44,7 +44,7 @@ module RubyRDF
     end
 
     def known?(bnode) #:nodoc:
-      @bnodes[bnode] > 0
+      bnode?(bnode) && @bnodes[bnode] > 0
     end
 
     private

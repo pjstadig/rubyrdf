@@ -104,11 +104,7 @@ module RubyRDF
       rescue InvalidStatementError
       end
 
-      if block_given?
-        nil
-      else
-        statements
-      end
+      statements unless block_given?
     end
 
     # Returns the number of statements in the graph.

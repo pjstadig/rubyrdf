@@ -30,7 +30,8 @@ module RubyRDF
     end
 
     # TODO implement
-    def each #:nodoc:
+    def each(&b) #:nodoc:
+      Reader::NTriples.new(StringIO.new(get_request(repo_path('statements'), {}, 'Accept' => 'text/plain'))).each(&b)
     end
 
     def add(*statement) #:nodoc:
@@ -137,9 +138,7 @@ module RubyRDF
 
     def get_request(path, params = {}, headers = {})
       Net::HTTP.start(@host, @port) do |http|
-        http.get(
-          format_uri(path, params),
-          headers).body
+        http.get(format_uri(path, params), headers).body
       end
     end
 
