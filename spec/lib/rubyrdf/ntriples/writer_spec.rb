@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. spec_helper]))
 
-describe RubyRDF::Writer::NTriples do
+describe RubyRDF::NTriples::Writer do
   def ex
     RubyRDF::Namespaces.ex
   end
@@ -12,7 +12,7 @@ describe RubyRDF::Writer::NTriples do
   before do
     RubyRDF::Namespaces.register(:ex => "http://example.com/")
     @graph = RubyRDF::MemoryGraph.new()
-    @it = RubyRDF::Writer::NTriples.new(@graph)
+    @it = RubyRDF::NTriples::Writer.new(@graph)
   end
 
   describe "export_node" do
@@ -144,7 +144,7 @@ describe RubyRDF::Writer::NTriples do
     it "should raise invalid character" do
       lambda {
         @it.escape_string([0x110000].pack("U"))
-      }.should raise_error(RubyRDF::Writer::NTriples::InvalidCharacter)
+      }.should raise_error(RubyRDF::NTriples::InvalidCharacterError)
     end
   end
 end

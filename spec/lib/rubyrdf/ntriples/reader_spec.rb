@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. spec_helper]))
 
-describe RubyRDF::Reader::NTriples do
+describe RubyRDF::NTriples::Reader do
   def ex
     RubyRDF::Namespaces.ex
   end
@@ -25,7 +25,7 @@ describe RubyRDF::Reader::NTriples do
 
   it "should read NTriples test file" do
     File.open(File.dirname(__FILE__) + "/test.nt") do |f|
-      reader = RubyRDF::Reader::NTriples.new(f)
+      reader = RubyRDF::NTriples::Reader.new(f)
       reader.eof?.should be_false
       compare(reader.read, RubyRDF::Statement.new(ex::resource1, ex::property, ex::resource2))
       compare(reader.read, RubyRDF::Statement.new(Object.new, ex::property, ex::resource2))
@@ -62,7 +62,14 @@ describe RubyRDF::Reader::NTriples do
   end
 
   it "should decode unicode characters in URI" do
-    reader = RubyRDF::Reader::NTriples.new(StringIO.new("<http://example.org/\\u20AC> <#{ex::property}> <#{ex::resource2}>.\n"))
+    reader = RubyRDF::NTriples::Reader.new(StringIO.new("<http://example.org/\\u20AC> <#{ex::property}> <#{ex::resource2}>.\n"))
     reader.read.should == RubyRDF::Statement.new(Addressable::URI.parse("http://example.org/#{[0x20AC].pack("U")}"), ex::property, ex::resource2)
+  end
+
+  it "should raise SyntaxError when missing space between nodes" do
+    reader = RubyRDF::NTriples::Reader.new(StringIO.new("<http://example.org/\\u20AC><#{ex::property}><#{ex::resource2}>.\n"))
+    lambda {
+      reader.read
+    }.should raise_error(RubyRDF::NTriples::SyntaxError)
   end
 end

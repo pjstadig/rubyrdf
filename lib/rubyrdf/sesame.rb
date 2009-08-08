@@ -30,7 +30,7 @@ module RubyRDF
     end
 
     def each(&b) #:nodoc:
-      Reader::NTriples.new(get_request(repo_path('statements'), {}, 'Accept' => 'text/plain')).each(&b)
+      NTriples::Reader.new(get_request(repo_path('statements'), {}, 'Accept' => 'text/plain')).each(&b)
     end
 
     def add(*statement) #:nodoc:

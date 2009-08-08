@@ -47,11 +47,11 @@ describe RubyRDF::Graph do
     it "should raise UnknownFormat error" do
       lambda{
         @it.export(:bogus)
-      }.should raise_error(RubyRDF::Writer::UnknownFormatError)
+      }.should raise_error(RubyRDF::UnknownFormatError)
     end
 
     it "should default to NTriples" do
-      RubyRDF::Writer::NTriples.should_receive(:new).
+      RubyRDF::NTriples::Writer.should_receive(:new).
         with(@it).and_return(ntriples = mock("ntriples"))
       ntriples.should_receive(:export).with(an_instance_of(StringIO))
       @it.export

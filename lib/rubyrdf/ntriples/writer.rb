@@ -1,10 +1,8 @@
 require 'digest/md5'
 
 module RubyRDF
-  module Writer
-    class NTriples
-      class InvalidCharacter < RubyRDF::Error; end
-
+  module NTriples
+    class Writer
       attr_reader :graph
 
       def initialize(graph)
@@ -55,7 +53,7 @@ module RubyRDF
           elsif char < 0x110000
             encode_long_unicode(char)
           else
-            raise InvalidCharacter
+            raise InvalidCharacterError
           end
         end.join
       end

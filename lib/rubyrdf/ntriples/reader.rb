@@ -1,8 +1,6 @@
 module RubyRDF
-  module Reader
-    class NTriples
-      class SyntaxError < RubyRDF::Error; end
-
+  module NTriples
+    class Reader
       attr_reader :io
 
       def initialize(io)
