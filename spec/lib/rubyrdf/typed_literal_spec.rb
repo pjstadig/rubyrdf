@@ -83,31 +83,31 @@ end
 
 describe "Integer#to_literal" do
   it "should convert to TypedLiteral" do
-    2.to_literal.should == RubyRDF::TypedLiteral.new("2", RubyRDF::Namespaces.xsd::integer)
+    2.to_literal.should == RubyRDF::TypedLiteral.new("2", RubyRDF::Namespace::XSD::integer)
   end
 end
 
 describe "Float#to_literal" do
   it "should convert to TypedLiteral" do
-    1.5.to_literal.should == RubyRDF::TypedLiteral.new("1.5", RubyRDF::Namespaces.xsd::double)
+    1.5.to_literal.should == RubyRDF::TypedLiteral.new("1.5", RubyRDF::Namespace::XSD::double)
   end
 end
 
 describe "String#to_literal" do
   it "should convert to TypedLiteral" do
-    "test".to_literal.should == RubyRDF::TypedLiteral.new("test", RubyRDF::Namespaces.xsd::string)
+    "test".to_literal.should == RubyRDF::TypedLiteral.new("test", RubyRDF::Namespace::XSD::string)
   end
 end
 
 describe "TrueClass#to_literal" do
   it "should convert to TypedLiteral" do
-    true.to_literal.should == RubyRDF::TypedLiteral.new("true", RubyRDF::Namespaces.xsd::boolean)
+    true.to_literal.should == RubyRDF::TypedLiteral.new("true", RubyRDF::Namespace::XSD::boolean)
   end
 end
 
 describe "FalseClass#to_literal" do
   it "should convert to TypedLiteral" do
-    false.to_literal.should == RubyRDF::TypedLiteral.new("false", RubyRDF::Namespaces.xsd::boolean)
+    false.to_literal.should == RubyRDF::TypedLiteral.new("false", RubyRDF::Namespace::XSD::boolean)
   end
 end
 
@@ -115,20 +115,20 @@ describe "Time#to_literal" do
   it "should convert to TypedLiteral" do
     it = Time.now
     it.to_literal.should ==
-      RubyRDF::TypedLiteral.new(it.xmlschema, RubyRDF::Namespaces.xsd::dateTime)
+      RubyRDF::TypedLiteral.new(it.xmlschema, RubyRDF::Namespace::XSD::dateTime)
   end
 end
 
 describe "DateTime#to_literal" do
   it "should convert to TypedLiteral" do
     it = DateTime.new(2008, 12, 23, 0, 0, 0, -(5.0/24)).to_literal.should ==
-      RubyRDF::TypedLiteral.new("2008-12-23T00:00:00-05:00", RubyRDF::Namespaces.xsd::dateTime)
+      RubyRDF::TypedLiteral.new("2008-12-23T00:00:00-05:00", RubyRDF::Namespace::XSD::dateTime)
   end
 end
 
 describe "Date#to_literal" do
   it "should convert to TypedLiteral" do
     Date.civil(2008, 12, 23).to_literal.should ==
-      RubyRDF::TypedLiteral.new("2008-12-23", RubyRDF::Namespaces.xsd::date)
+      RubyRDF::TypedLiteral.new("2008-12-23", RubyRDF::Namespace::XSD::date)
   end
 end

@@ -1,16 +1,16 @@
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. spec_helper]))
 
 describe RubyRDF::NTriples::Reader do
+  before do
+    @ex = RubyRDF::Namespace.new('http://example.org/')
+  end
+
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   def rdfs
-    RubyRDF::Namespaces.rdfs
-  end
-
-  before do
-    RubyRDF::Namespaces.register(:ex => "http://example.org/")
+    RubyRDF::Namespace::RDFS
   end
 
   def compare(actual, expected)

@@ -2,12 +2,12 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::Graph do
   before do
-    RubyRDF::Namespaces.register(:ex => 'http://example.com/')
+    @ex = RubyRDF::Namespace.new('http://example.org/')
     @it = RubyRDF::Graph.new
   end
 
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   it "should not be writable" do

@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::Statement do
   def rdf
-    RubyRDF::Namespaces.rdf
+    RubyRDF::Namespace::RDF
   end
 
   before do
@@ -110,7 +110,7 @@ end
 
 describe "Array#to_statement" do
   def rdf
-    RubyRDF::Namespaces.rdf
+    RubyRDF::Namespace::RDF
   end
 
   it 'should raise InvalidStatementError for two elements' do
@@ -139,7 +139,7 @@ end
 
 describe "Array#to_triple" do
   def rdf
-    RubyRDF::Namespaces.rdf
+    RubyRDF::Namespace::RDF
   end
 
   it 'should raise InvalidStatementError for two elements' do

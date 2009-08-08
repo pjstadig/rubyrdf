@@ -2,11 +2,11 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::SparqlResult do
   before do
-    RubyRDF::Namespaces.register(:ex => 'http://example.com/')
+    @ex = RubyRDF::Namespace.new('http://example.org/')
   end
 
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   it "should preserve blank node identity" do
@@ -44,7 +44,7 @@ describe RubyRDF::SparqlResult do
         <results>
           <result>
             <binding name='x'>
-              <uri>http://example.com/a</uri>
+              <uri>http://example.org/a</uri>
             </binding>
           </result>
         </results>
@@ -104,7 +104,7 @@ describe RubyRDF::SparqlResult do
         <results>
           <result>
             <binding name='x'>
-              <literal datatype='http://example.com/a'>test</literal>
+              <literal datatype='http://example.org/a'>test</literal>
             </binding>
           </result>
         </results>

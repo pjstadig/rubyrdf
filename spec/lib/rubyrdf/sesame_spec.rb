@@ -2,13 +2,13 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::Sesame do
   before do
+    @ex = RubyRDF::Namespace.new('http://example.org/')
     @graph = RubyRDF::Sesame.new('http://localhost:8180/openrdf-sesame', 'test')
     @graph.delete_all
-    RubyRDF::Namespaces.register(:ex => 'http://example.org/')
   end
 
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   describe 'initialize' do

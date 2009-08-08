@@ -2,12 +2,12 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 
 describe RubyRDF::MemoryGraph, "without statements" do
   before do
-    RubyRDF::Namespaces.register(:ex => 'http://example.com/')
+    @ex = RubyRDF::Namespace.new('http://example.org/')
     @it = RubyRDF::MemoryGraph.new
   end
 
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   it 'should be writable' do
@@ -26,13 +26,13 @@ end
 
 describe RubyRDF::MemoryGraph, "with statements" do
   before do
-    RubyRDF::Namespaces.register(:ex => 'http://example.com/')
+    @ex = RubyRDF::Namespace.new('http://example.org/')
     @it = RubyRDF::MemoryGraph.new(RubyRDF::Statement.new(ex::a, ex::b, ex::c),
                                    RubyRDF::Statement.new(ex::d, ex::e, ex::f))
   end
 
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   describe "size" do

@@ -37,42 +37,42 @@ end
 class Integer
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespaces.xsd::integer)
+    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespace::XSD::integer)
   end
 end
 
 class Float
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespaces.xsd::double)
+    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespace::XSD::double)
   end
 end
 
 class String
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(self, RubyRDF::Namespaces.xsd::string)
+    RubyRDF::TypedLiteral.new(self, RubyRDF::Namespace::XSD::string)
   end
 end
 
 class TrueClass
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespaces.xsd::boolean)
+    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespace::XSD::boolean)
   end
 end
 
 class FalseClass
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespaces.xsd::boolean)
+    RubyRDF::TypedLiteral.new(to_s, RubyRDF::Namespace::XSD::boolean)
   end
 end
 
 class Time
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(xmlschema, RubyRDF::Namespaces.xsd::dateTime)
+    RubyRDF::TypedLiteral.new(xmlschema, RubyRDF::Namespace::XSD::dateTime)
   end
 end
 
@@ -81,13 +81,13 @@ class DateTime
   def to_literal
     str = strftime("%Y-%m-%dT%H:%M:%S")
     str += zone unless offset == 0
-    RubyRDF::TypedLiteral.new(str, RubyRDF::Namespaces.xsd::dateTime)
+    RubyRDF::TypedLiteral.new(str, RubyRDF::Namespace::XSD::dateTime)
   end
 end
 
 class Date
   # Returns a RubyRDF::TypedLiteral representing this object.
   def to_literal
-    RubyRDF::TypedLiteral.new(strftime("%Y-%m-%d"), RubyRDF::Namespaces.xsd::date)
+    RubyRDF::TypedLiteral.new(strftime("%Y-%m-%d"), RubyRDF::Namespace::XSD::date)
   end
 end

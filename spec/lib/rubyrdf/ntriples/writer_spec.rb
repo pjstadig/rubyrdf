@@ -1,18 +1,18 @@
 require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. spec_helper]))
 
 describe RubyRDF::NTriples::Writer do
+  before do
+    @ex = RubyRDF::Namespace.new('http://example.org/')
+    @graph = RubyRDF::MemoryGraph.new()
+    @it = RubyRDF::NTriples::Writer.new(@graph)
+  end
+
   def ex
-    RubyRDF::Namespaces.ex
+    @ex
   end
 
   def xsd
-    RubyRDF::Namespaces.xsd
-  end
-
-  before do
-    RubyRDF::Namespaces.register(:ex => "http://example.com/")
-    @graph = RubyRDF::MemoryGraph.new()
-    @it = RubyRDF::NTriples::Writer.new(@graph)
+    RubyRDF::Namespace::XSD
   end
 
   describe "export_node" do
