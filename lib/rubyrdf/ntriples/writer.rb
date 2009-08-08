@@ -1,5 +1,3 @@
-require 'digest/md5'
-
 module RubyRDF
   module NTriples
     class Writer
