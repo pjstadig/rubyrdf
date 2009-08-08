@@ -4,15 +4,7 @@
 * Graph implementations
 - NTriples file
 - RDF/XML file
-- Sesame
 - Consolidated graph
-* Exports in the Graph base class
-* Reification for Graph base class
-* blank node validation
-* uri node validation
-* plain literal node validation
-* typed literal node validation
-* to_node
 * to_f
 * to_i
 * to_int

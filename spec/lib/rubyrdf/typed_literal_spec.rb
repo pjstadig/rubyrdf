@@ -79,6 +79,26 @@ describe RubyRDF::TypedLiteral do
   it "should return self for to_literal" do
     @it.to_literal.should equal(@it)
   end
+
+  describe "to_ntriples" do
+    it "should use NTriples.escape" do
+      RubyRDF::NTriples.should_receive(:escape)
+      RubyRDF::NTriples.should_receive(:escape_unicode)
+      @it.to_ntriples
+    end
+
+    it "should be NTriples format" do
+      @it.to_ntriples.should == %Q("#{@lexical_form}"^^<#{@datatype_uri}>)
+    end
+  end
+
+  it "should alias #to_ntriples as #inspect" do
+    @it.class.instance_method(:inspect).should == @it.class.instance_method(:to_ntriples)
+  end
+
+  it "should alias #to_ntriples as #to_s" do
+    @it.class.instance_method(:to_s).should == @it.class.instance_method(:to_ntriples)
+  end
 end
 
 describe "Integer#to_literal" do

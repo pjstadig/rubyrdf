@@ -120,17 +120,10 @@ module RubyRDF
         :obj => node_to_ntriples(statement.object)}
     end
 
-    #--
-    # TODO this needs to be removed, it is not properly encoding unicode characters
     def node_to_ntriples(node)
       case node
-      when Addressable::URI
-        "<#{node}>"
-      when TypedLiteral
-        %Q("#{node.lexical_form}"^^<#{node.datatype_uri}>)
-      when PlainLiteral
-        %Q("#{node.lexical_form}") +
-          (node.language_tag ? "@#{node.language_tag}" : "")
+      when Addressable::URI, TypedLiteral, PlainLiteral
+        node.to_ntriples
       else
         "_:bn#{generate_bnode_name}"
       end

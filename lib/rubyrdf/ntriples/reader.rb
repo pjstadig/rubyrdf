@@ -171,32 +171,11 @@ module RubyRDF
 
       def absoluteUri
         str = character
-        backslash = false
-        while character? && (!test('>') || backslash)
-          char = character
-          if char == '\\' && !backslash
-            backslash = true
-          else
-            if backslash
-              backslash = false
-              char = convert_unicode_backslash(char)
-            end
-
-            str << char
-          end
+        while character? && !test('>')
+          str << character
         end
-        str
-      end
 
-      def convert_unicode_backslash(char)
-        case char
-        when 'u'
-          small_unicode_value
-        when 'U'
-          long_unicode_value
-        else
-          char
-        end
+        NTriples.unescape_unicode(str)
       end
 
       def nodeId
@@ -242,60 +221,15 @@ module RubyRDF
 
       def string
         str = ''
-        backslash = false
-        while character? && (!test('"') || backslash)
+        while character? && !test('"')
           char = character
-          if char == '\\' && !backslash
-            backslash = true
-          else
-            if backslash
-              backslash = false
-              char = convert_backslash(char)
-            end
-
-            str << char
+          str << char
+          if char == '\\' && (test('\\') || test('"'))
+            str << consume
           end
         end
-        str
-      end
 
-      def convert_backslash(char)
-        case char
-        when 'n'
-          "\n"
-        when 'r'
-          "\r"
-        when 't'
-          "\t"
-        else
-          convert_unicode_backslash(char)
-        end
-      end
-
-      def small_unicode_value
-        value = ''
-        while peek =~ /[A-Fa-f0-9]/
-          value << consume
-        end
-
-        if value.size == 4
-          [value.hex].pack('U')
-        else
-          raise SyntaxError, 'Expected no more than four hexadecimal characters'
-        end
-      end
-
-      def long_unicode_value
-        value = ''
-        while peek =~ /[A-Fa-f0-9]/
-          value << consume
-        end
-
-        if value.size == 8
-          [value.hex].pack('U')
-        else
-          raise SyntaxError, 'Expected between five and eight hexadecimal characters'
-        end
+        NTriples.unescape(str)
       end
 
       def lang

@@ -24,5 +24,10 @@ module Addressable #:nodoc:
     def to_uri
       self
     end
+
+    # Returns the NTriples serialization of this node.
+    def to_ntriples
+      "<#{RubyRDF::NTriples.escape_unicode(to_s)}>"
+    end
   end
 end

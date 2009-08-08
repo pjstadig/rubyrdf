@@ -63,6 +63,25 @@ describe RubyRDF::PlainLiteral, "without language_tag" do
   it "should return self from to_literal" do
     @it.to_literal.should equal(@it)
   end
+
+  describe "to_ntriples" do
+    it "should use NTriples.escape" do
+      RubyRDF::NTriples.should_receive(:escape)
+      @it.to_ntriples
+    end
+
+    it "should be NTriples format" do
+      @it.to_ntriples.should == %Q("#{@lexical_form}")
+    end
+  end
+
+  it "should alias #to_ntriples as #inspect" do
+    @it.class.instance_method(:inspect).should == @it.class.instance_method(:to_ntriples)
+  end
+
+  it "should alias #to_ntriples as #to_s" do
+    @it.class.instance_method(:to_s).should == @it.class.instance_method(:to_ntriples)
+  end
 end
 
 describe RubyRDF::PlainLiteral, "with language_tag" do
@@ -124,6 +143,12 @@ describe RubyRDF::PlainLiteral, "with language_tag" do
 
     it "should not be equal with a different lexical_form and the same language_tag" do
       @it.hash.should_not == RubyRDF::PlainLiteral.new("different", @language_tag).hash
+    end
+  end
+
+  describe "to_ntriples" do
+    it "should be NTriples format" do
+      @it.to_ntriples.should == %Q("#{@lexical_form}"@#{@language_tag})
     end
   end
 end

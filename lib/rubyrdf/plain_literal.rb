@@ -1,8 +1,5 @@
 module RubyRDF
   # An RDF plain literal.
-  #--
-  # TODO to_s
-  # TODO inspect
   class PlainLiteral
     attr_reader :lexical_form
     attr_reader :language_tag
@@ -30,5 +27,12 @@ module RubyRDF
     def to_literal
       self
     end
+
+    # Returns the NTriples serialization of this node.
+    def to_ntriples
+      %Q("#{NTriples.escape(@lexical_form)}") + (@language_tag ? "@#{@language_tag}" : "")
+    end
+    alias_method :to_s, :to_ntriples
+    alias_method :inspect, :to_ntriples
   end
 end

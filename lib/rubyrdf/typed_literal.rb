@@ -1,7 +1,4 @@
 module RubyRDF
-  #--
-  # TODO to_s
-  # TODO inspect
   class TypedLiteral
     attr_reader :lexical_form
     attr_reader :datatype_uri
@@ -31,6 +28,13 @@ module RubyRDF
     def to_literal
       self
     end
+
+    # Returns the NTriples serialization of this node.
+    def to_ntriples
+      %Q("#{NTriples.escape(@lexical_form)}"^^#{@datatype_uri.to_ntriples})
+    end
+    alias_method :to_s, :to_ntriples
+    alias_method :inspect, :to_ntriples
   end
 end
 
