@@ -117,12 +117,31 @@ module RubyRDF
       size == 0
     end
 
+    # Imports RDF statements from +io+ in the specified +format+ into the graph. Valid values for
+    # +format+ are:
+    # * :ntriples
+    # * :rdfxml
+    #
+    # If +format+ is not given, then :ntriples is assumed.
+    def import(io, format = nil)
+      format ||= :ntriples
+
+      case format
+      when :ntriples
+        NTriples::Reader.new(io).each{|s| add(s)}
+      else
+        raise UnknownFormatError
+      end
+    end
+
     # Exports the graph to +io+ in the specified +format+. Valid values for +format+ are:
     # * :ntriples
     # * :rdfxml
     #
     # If no +io+ is given, then a StringIO will be used, and the exported graph will be
     # returned.  Otherwise, +nil+ is returned.
+    #
+    # If +format+ is not given, then :ntriples is assumed.
     def export(format = nil, io = nil)
       format ||= :ntriples
 
@@ -215,12 +234,6 @@ module RubyRDF
 
         add(bnodes[s] || s, p, bnodes[o] || o)
       end
-    end
-
-    #--
-    # TODO document
-    def generate_bnode_name
-      "bn#{Digest::MD5.hexdigest(Time.now.to_s)}"
     end
   end
 end

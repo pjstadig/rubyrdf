@@ -23,12 +23,8 @@ module RubyRDF
         when Addressable::URI, PlainLiteral, TypedLiteral
           node.to_ntriples
         else
-          "_:bn#{@bnodes[node] ||= generate_bnode_name}"
+          "_:bn#{@bnodes[node] ||= RubyRDF.generate_bnode_name}"
         end
-      end
-
-      def generate_bnode_name
-        Digest::MD5.hexdigest(Time.now.to_s)
       end
     end
   end

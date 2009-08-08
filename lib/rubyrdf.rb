@@ -1,6 +1,8 @@
 $KCODE = 'utf8'
 $:.unshift(File.expand_path(File.dirname(__FILE__))) unless $:.include?(File.expand_path(File.dirname(__FILE__)))
 
+require 'digest/md5'
+
 begin
   require 'activesupport'
 rescue LoadError
@@ -57,6 +59,11 @@ module RubyRDF
         ::File.join(::File.dirname(fname), dir, '**', '*.rb'))
 
     Dir.glob(search_me).sort.each {|rb| require rb}
+  end
+
+  # Generate a new, unique name for a blank node.
+  def self.generate_bnode_name
+    "bn#{Digest::MD5.hexdigest(rand.to_s + Time.now.to_s)}"
   end
 end
 

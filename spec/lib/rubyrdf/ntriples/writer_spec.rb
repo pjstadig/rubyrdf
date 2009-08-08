@@ -23,12 +23,12 @@ describe RubyRDF::NTriples::Writer do
     end
 
     it "should export bnode" do
-      @it.should_receive(:generate_bnode_name).and_return("name")
+      RubyRDF.should_receive(:generate_bnode_name).and_return("name")
       @it.export_node(Object.new).should == "_:bnname"
     end
 
     it "should cache bnode name" do
-      @it.should_receive(:generate_bnode_name).and_return("name")
+      RubyRDF.should_receive(:generate_bnode_name).and_return("name")
       obj = Object.new
       @it.export_node(obj).should == "_:bnname"
       @it.export_node(obj).should == "_:bnname"

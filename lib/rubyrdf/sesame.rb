@@ -125,7 +125,7 @@ module RubyRDF
       when Addressable::URI, TypedLiteral, PlainLiteral
         node.to_ntriples
       else
-        "_:bn#{generate_bnode_name}"
+        "_:bn#{RubyRDF.generate_bnode_name}"
       end
     end
 
@@ -201,7 +201,7 @@ module RubyRDF
       if node.is_a?(Addressable::URI)
         b.uri(node.to_s)
       elsif bnode?(node)
-        b.bnode("_:" + (bnodes[node] ||= generate_bnode_name))
+        b.bnode("_:" + (bnodes[node] ||= RubyRDF.generate_bnode_name))
       elsif node.is_a?(TypedLiteral)
         b.literal(node.lexical_form, :datatype => node.datatype_uri)
       elsif node.is_a?(PlainLiteral)
