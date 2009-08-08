@@ -226,13 +226,11 @@ module RubyRDF
       post_request(repo_path('statements'), doc, {}, 'Content-Type' => 'application/x-rdftransaction').read
     end
 
-    #--
-    # TODO use Addressable::URI instead URI?
     def format_uri(path, params = {})
       if params.empty?
         path
       else
-        path + "?" + params.map{|k, v| "#{k}=#{URI.escape(v)}"}.join("&")
+        path + "?" + params.map{|k, v| "#{k}=#{Addressable::URI.escape(v)}"}.join("&")
       end
     end
   end
