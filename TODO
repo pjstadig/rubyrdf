@@ -1,10 +1,13 @@
-* Simple query protocol for graph
-- Query class
-* Reasoner and rules
+* Reader/Writer
+- RDF/XML
+- Turtle
 * Graph implementations
-- NTriples file
-- RDF/XML file
-- Consolidated graph
+- SPARQL endpoint
+- URI graph
+- Federated graph
+* SPARQL query implementation
+* Ruby-based query module?
+* Reasoner and rules
 * to_f
 * to_i
 * to_int

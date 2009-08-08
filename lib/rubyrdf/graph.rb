@@ -4,11 +4,6 @@ module RubyRDF
   # interface is implemented as specified here.
   #--
   # TODO transaction support
-  # TODO SPARQL support
-  # TODO Ruby query support
-  # TODO _add and _delete
-  # TODO should keep import because some graphs have efficient imports (like Sesame)...figure something out
-  # TODO perhaps have a default import that may be slow, and allow subclasses to override
   class Graph
     include Enumerable
 
