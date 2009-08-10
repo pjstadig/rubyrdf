@@ -19,6 +19,14 @@ rescue LoadError
   require 'addressable/uri'
 end
 
+begin
+  require 'nokogiri'
+rescue LoadError
+  require 'rubygems'
+  gem 'nokogiri', '>=1.3.2'
+  require 'nokogiri'
+end
+
 module RubyRDF
   # :stopdoc:
   VERSION = '0.99.0'
