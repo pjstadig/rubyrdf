@@ -82,7 +82,7 @@ describe RubyRDF::Sesame do
     result.any?{|r| r['y'] == RubyRDF::PlainLiteral.new('test', 'en')}.should be_true
     result.any?{|r| r['y'] == RubyRDF::TypedLiteral.new('test', ex::a)}.should be_true
     result.any?{|r| r['y'] == ex::e}.should be_true
-    result.any?{|r| @graph.bnode?(r['y']) }.should be_true
+    result.any?{|r| RubyRDF.bnode?(r['y']) }.should be_true
   end
 
   it "should execute SPARQL select query with empty result" do

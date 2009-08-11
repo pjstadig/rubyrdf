@@ -64,7 +64,7 @@ module RubyRDF
   def self.require_all_libs_relative_to( fname, dir = nil )
     dir ||= ::File.basename(fname, '.*')
     search_me = ::File.expand_path(
-        ::File.join(::File.dirname(fname), dir, '**', '*.rb'))
+                                   ::File.join(::File.dirname(fname), dir, '**', '*.rb'))
 
     Dir.glob(search_me).sort.each {|rb| require rb}
   end
@@ -72,6 +72,21 @@ module RubyRDF
   # Generate a new, unique name for a blank node.
   def self.generate_bnode_name
     "bn#{Digest::MD5.hexdigest(rand.to_s + Time.now.to_s)}"
+  end
+
+  # Returns true if +node+ is an URI, false otherwise.
+  def self.uri?(node)
+    node.is_a?(Addressable::URI)
+  end
+
+  # Returns true if +node+ is a literal (plain or typed), false otherwise.
+  def self.literal?(node)
+    node.is_a?(PlainLiteral) || node.is_a?(TypedLiteral)
+  end
+
+  # Returns true if +node+ is a blank node, false otherwise.
+  def self.bnode?(node)
+    !uri?(node) && !literal?(node)
   end
 end
 

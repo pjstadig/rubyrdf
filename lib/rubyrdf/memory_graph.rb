@@ -42,7 +42,7 @@ module RubyRDF
     end
 
     def known?(bnode) #:nodoc:
-      bnode?(bnode) && @bnodes[bnode] > 0
+      RubyRDF.bnode?(bnode) && @bnodes[bnode] > 0
     end
 
     private
@@ -95,13 +95,13 @@ module RubyRDF
     end
 
     def increment(idx, key)
-      if bnode?(key)
+      if RubyRDF.bnode?(key)
         idx[key] += 1
       end
     end
 
     def decrement(idx, key)
-      if bnode?(key)
+      if RubyRDF.bnode?(key)
         idx[key] -= 1
         idx.delete(key) if idx[key] == 0
       end

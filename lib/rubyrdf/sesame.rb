@@ -200,7 +200,7 @@ module RubyRDF
     def transaction_xml_node(b, node, bnodes)
       if node.is_a?(Addressable::URI)
         b.uri(node.to_s)
-      elsif bnode?(node)
+      elsif RubyRDF.bnode?(node)
         b.bnode("_:" + (bnodes[node] ||= RubyRDF.generate_bnode_name))
       elsif node.is_a?(TypedLiteral)
         b.literal(node.lexical_form, :datatype => node.datatype_uri)

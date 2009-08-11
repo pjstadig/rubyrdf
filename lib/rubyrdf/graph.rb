@@ -7,21 +7,6 @@ module RubyRDF
   class Graph
     include Enumerable
 
-    # Returns true if +node+ is an URI, false otherwise.
-    def uri?(node)
-      node.is_a?(Addressable::URI)
-    end
-
-    # Returns true if +node+ is a literal (plain or typed), false otherwise.
-    def literal?(node)
-      node.is_a?(PlainLiteral) || node.is_a?(TypedLiteral)
-    end
-
-    # Returns true if +node+ is a blank node, false otherwise.
-    def bnode?(node)
-      !uri?(node) && !literal?(node)
-    end
-
     # Yields each statement to the given block
     def each; raise NotImplementedError end
 
@@ -74,15 +59,15 @@ module RubyRDF
         sub, pred, obj = fragment.to_triple.map{|x| x || Object.new}
         each do |s|
           bindings = {}
-          if bnode?(sub)
+          if RubyRDF.bnode?(sub)
             bindings[sub] = s.subject
           end
 
-          if bnode?(pred) && !bindings[pred]
+          if RubyRDF.bnode?(pred) && !bindings[pred]
             bindings[pred] = s.predicate
           end
 
-          if bnode?(obj) && !bindings[obj]
+          if RubyRDF.bnode?(obj) && !bindings[obj]
             bindings[obj] = s.object
           end
 
@@ -159,7 +144,7 @@ module RubyRDF
     #
     # +node+ is a variable if it is a Symbol, or if it is a BNode that is unknown to this graph.
     def variable?(node)
-      node.is_a?(Symbol) || (bnode?(node) && !known?(node))
+      node.is_a?(Symbol) || (RubyRDF.bnode?(node) && !known?(node))
     end
 
     # True if this graph is writable, false otherwise.
@@ -224,8 +209,8 @@ module RubyRDF
       bnodes = {}
       statements.map{|st| st.to_statement}.each do |st|
         s, p, o = st.subject, st.predicate, st.object
-        bnodes[s] ||= Object.new if bnode?(s)
-        bnodes[o] ||= Object.new if bnode?(o)
+        bnodes[s] ||= Object.new if RubyRDF.bnode?(s)
+        bnodes[o] ||= Object.new if RubyRDF.bnode?(o)
 
         add(bnodes[s] || s, p, bnodes[o] || o)
       end
