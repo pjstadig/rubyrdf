@@ -109,4 +109,55 @@ describe RubyRDF::MemoryGraph, "with statements" do
     g.is_a?(RubyRDF::Graph).should be_true
     g.size.should == 0
   end
+
+  describe "query" do
+    it "should match bnodes" do
+      @it.add(Object.new, ex::prop, ex::obj)
+      @it.add(a = Object.new, ex::prop, ex::obj)
+      @it.add(a, ex::prop2, ex::obj)
+
+      result = @it.query(RubyRDF::Query.new do |q|
+                           q.where(:a, ex::prop, ex::obj)
+                           q.where(:a, ex::prop2, ex::obj)
+                         end)
+      result.size.should == 1
+      result[0][:a].should == a
+    end
+
+    it "should be nil" do
+      @it.add(Object.new, ex::prop, ex::obj)
+      @it.add(Object.new, ex::prop, ex::obj)
+
+      result = @it.query(RubyRDF::Query.new do |q|
+                           q.select(:a)
+                           q.where(:a, ex::prop, ex::obj)
+                           q.where(:a, ex::prop2, ex::obj)
+                         end)
+      result.should be_nil
+    end
+
+    it "should be empty" do
+      @it.add(ex::sub, ex::prop, ex::obj)
+
+      result = @it.query(RubyRDF::Query.new do |q|
+                           q.where(ex::sub, ex::prop, ex::obj)
+                         end)
+      result.should_not be_nil
+      result.should be_empty
+    end
+
+    it "should filter" do
+      @it.add(ex::sub, ex::prop, ex::obj)
+      @it.add(ex::sub, ex::prop, 2.to_literal)
+
+      result = @it.query(RubyRDF::Query.new do |q|
+                           q.where(ex::sub, ex::prop, :a)
+                           q.filter{|b|
+                             RubyRDF.literal?(b[:a])
+                           }
+                         end)
+      result.size.should == 1
+      result[0][:a].should == 2.to_literal
+    end
+  end
 end

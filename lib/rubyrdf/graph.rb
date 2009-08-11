@@ -215,5 +215,98 @@ module RubyRDF
         add(bnodes[s] || s, p, bnodes[o] || o)
       end
     end
+
+    #--
+    # TODO document
+    def query(query)
+      case query
+      when Query
+        query_ruby(query)
+      end
+    end
+
+    private
+    def query_ruby(query)
+      clauses, sanitizers = sanitize(query)
+      bindings = query_ruby_clause(clauses.shift, query.filter, Set.new)
+      while bindings && clauses.any?
+        bindings = query_ruby_clause(clauses.shift, query.filter, bindings)
+      end
+
+      bindings = bindings && bindings.delete_if{|b| b.empty?}
+      bindings = bindings && bindings.map{|b|
+        b = desanitize(b, sanitizers)
+        b.slice(*query.select) if query.select.any?
+        b
+      }
+      bindings = bindings && bindings.select{|b| query.filter.call(b)} if query.filter
+      bindings
+    end
+
+    def sanitize(query)
+      bindings = {}
+      sanitizers = {}
+      [query.where.map do |clause|
+        clause.to_triple.map do |node|
+           if RubyRDF.bnode?(node)
+             b = (bindings[node] ||= Object.new)
+             sanitizers[b] = node
+             b
+           else
+             node
+           end
+        end
+      end, sanitizers]
+    end
+
+    def desanitize(binding, sanitizers)
+      binding.inject({}) do |h, entry|
+        if sanitizers.has_key?(entry.first)
+          h[sanitizers[entry.first]] = entry.last
+        else
+          h[entry.first] = entry.last
+        end
+        h
+      end
+    end
+
+    def query_ruby_clause(clause, filter, bindings)
+      if bindings.empty?
+        query_ruby_clause_binding(clause, filter, {})
+      else
+        bindings = bindings.inject(Set.new) do |bb, b|
+          result = query_ruby_clause_binding(clause, filter, b)
+          if result
+            bb += result
+          end
+          bb
+        end
+        bindings if bindings.any?
+      end
+    end
+
+    def query_ruby_clause_binding(clause, filter, binding)
+      clause = if clause.any?{|n| binding.has_key?(n)}
+                 clause.map{|n| binding[n] || n}
+               else
+                 clause
+               end
+
+      result = match(*clause)
+      if result.any?
+        bindings = result.inject(Set.new) do |bindings, s|
+          bindings << query_ruby_bind(s, binding, clause)
+        end
+        bindings if bindings.any?
+      end
+    end
+
+    def query_ruby_bind(statement, binding, clause)
+      h = binding.dup
+      h[clause[0]] = statement.subject if RubyRDF.bnode?(clause[0]) && !known?(clause[0])
+      h[clause[1]] = statement.predicate if RubyRDF.bnode?(clause[1]) && !known?(clause[1])
+      h[clause[2]] = statement.object if RubyRDF.bnode?(clause[2]) && !known?(clause[2])
+      h
+    end
   end
 end
