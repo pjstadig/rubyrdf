@@ -105,9 +105,9 @@ module RubyRDF
         end
 
         def old_terms?(uri)
-          [RDF::aboutEach,
-           RDF::aboutEachPrefix,
-           RDF::bagID].include?(uri)
+          raise SyntaxError, "rdf:aboutEach has been withdrawn from the language" if uri == RDF::aboutEach
+          raise SyntaxError, "rdf:aboutEachPrefix has been withdrawn from the language" if uri == RDF::aboutEachPrefix
+          raise SyntaxError, "rdf:bagID has been withdrawn from the language" if uri == RDF::bagID
         end
 
         def node_element_uris?(uri)

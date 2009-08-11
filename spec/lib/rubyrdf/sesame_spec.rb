@@ -32,7 +32,7 @@ describe RubyRDF::Sesame do
   describe "each" do
     it "should iterate each statement" do
       s1 = RubyRDF::Statement.new(ex::a, ex::b, ex::c)
-      s2 = RubyRDF::Statement.new(ex::a, ex::b, ex::c)
+      s2 = RubyRDF::Statement.new(ex::a, ex::b, ex::d)
       expected = [s1, s2]
       @graph.add_all(*expected)
       @graph.each{|s| expected.delete(s).should be_true}
