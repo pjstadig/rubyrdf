@@ -25,11 +25,11 @@ module RubyRDF
                               end
 
             lang = attributes.select do |a|
-              "#{a.uri}/#{a.localname}" == XML::lang
+              "#{a.uri}/#{a.localname}" == XML::lang.to_s
             end.first
 
             base = attributes.select do |a|
-              "#{a.uri}/#{a.localname}" == XML::base
+              "#{a.uri}/#{a.localname}" == XML::base.to_s
             end.first
 
             @base_uri = if base

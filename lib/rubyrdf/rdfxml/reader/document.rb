@@ -13,6 +13,8 @@ module RubyRDF
           @states = []
           @bnodes = {}
           @nodes = []
+          @literal_root = nil
+          @literal_current = nil
         end
 
         def start_document
@@ -28,40 +30,61 @@ module RubyRDF
         end
 
         def start_element_namespace(name, attrs = [], prefix = nil, uri = nil, ns = [])
-          if @root.document_element
-            @current = ElementEvent.new(@current, name, uri, attrs)
+          if @states.last == :parse_type_literal_property_elt
+            new_node = Nokogiri::XML::Node.new(name, @literal_root.document)
+            # TODO add the attributes
+            @literal_current << new_node
+            @literal_current = new_node
           else
-            @current = ElementEvent.new(@root, name, uri, attrs)
-            @root.document_element = @current
-          end
+            if @root.document_element
+              @current = ElementEvent.new(@current, name, uri, attrs)
+            else
+              @current = ElementEvent.new(@root, name, uri, attrs)
+              @root.document_element = @current
+            end
 
-          if @states.empty?
-            start_grammar
-          elsif @states.last == :resource_literal_or_empty_property_elt
-            node_element
-            @nodes.push(@current)
-          elsif @states.last == :end_element
-            raise SyntaxError, "Expected end element not #{@current.uri}"
-          elsif @states.last == :end_document
-            raise SyntaxError, "Expected end of document not #{@current.uri}"
-          else
-            send(@states.last)
+            if @states.empty?
+              start_grammar
+            elsif @states.last == :resource_literal_or_empty_property_elt
+              node_element
+              @nodes.push(@current)
+            elsif @states.last == :end_element
+              raise SyntaxError, "Expected end element not #{@current.uri}"
+            elsif @states.last == :end_document
+              raise SyntaxError, "Expected end of document not #{@current.uri}"
+            else
+              send(@states.last)
+            end
           end
         end
 
         def characters(string)
-          @text = string
+          if @states.last == :parse_type_literal_property_elt
+            node = Nokogiri::XML::Text.new(string, @literal_root.document)
+            @literal_current << node
+          else
+            @text = string
+          end
         end
 
         def end_element_namespace(name, prefix = nil, uri = nil)
-          case @states.last
-          when :end_element, :node_element_list, :property_elt_list
-            @states.pop
-          when :resource_literal_or_empty_property_elt
-            resource_literal_or_empty_property_elt
+          if @states.last == :parse_type_literal_property_elt
+            if @literal_current == @literal_root &&
+              Addressable::URI.parse("#{uri}#{name}") == @current.uri
+              parse_type_literal_property_elt
+            else
+              @literal_current = @literal_current.parent
+            end
+          else
+            case @states.last
+            when :end_element, :node_element_list, :property_elt_list
+              @states.pop
+            when :resource_literal_or_empty_property_elt
+              resource_literal_or_empty_property_elt
+            end
+            @text = nil
+            @current = @current.parent
           end
-          @text = nil
-          @current = @current.parent
         end
 
         # Grammar productions
@@ -208,8 +231,14 @@ module RubyRDF
         end
 
         def property_elt
+          if @current.uri == RDF::li
+            @current.uri = Addressable::URI.parse("http://www.w3.org/1999/02/22-rdf-syntax-ns#_#{@current.parent.li_counter}")
+            @current.parent.li_counter += 1
+          end
+
           if parse_type_literal_property_elt?
-            parse_type_literal_property_elt
+            @literal_root = @literal_current = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
+            @states.push(:parse_type_literal_property_elt)
           elsif parse_type_resource_property_elt?
             parse_type_resource_property_elt
           elsif parse_type_collection_property_elt?
@@ -224,6 +253,16 @@ module RubyRDF
         def parse_type_literal_property_elt?
           a = @current.has_attribute?(RDF::parseType)
           a && a.string_value == "Literal"
+        end
+
+        def parse_type_literal_property_elt
+          @block.call(Statement.new(@current.parent.subject,
+                                    @current.uri,
+                                    TypedLiteral.new(@literal_root.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::NO_EMPTY_TAGS),
+                                                     RDF::XMLLiteral)))
+          @literal_root = nil
+          @literal_current = nil
+          @states.pop
         end
 
         def parse_type_resource_property_elt?
@@ -277,8 +316,8 @@ module RubyRDF
               (@current.attributes.size == 1 &&
                (id = @current.has_attribute?(RDF::ID)))
             @block.call(s = Statement.new(@current.parent.subject,
-                                      @current.uri,
-                                      PlainLiteral.new("", @current.language)))
+                                          @current.uri,
+                                          PlainLiteral.new("", @current.language)))
           else
             node = nil
             if resource = @current.has_attribute?(RDF::resource)
