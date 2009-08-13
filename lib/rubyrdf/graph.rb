@@ -29,7 +29,7 @@ module RubyRDF
 
     # True if +bnode+ is contained in at least one statement in the graph, false otherwise.
     def known?(bnode)
-      if bnode?(bnode)
+      if RubyRDF.bnode?(bnode)
         each{|s| return true if s.subject == bnode || s.object == bnode}
       end
       false
@@ -103,12 +103,14 @@ module RubyRDF
     # * :rdfxml
     #
     # If +format+ is not given, then :ntriples is assumed.
-    def import(io, format = nil)
-      format ||= :ntriples
+    def import(io, options = nil)
+      options = {:format => :ntriples}.merge(options || {})
 
-      case format
+      case options.delete(:format)
       when :ntriples
         NTriples::Reader.new(io).each{|s| add(s)}
+      when :rdfxml
+        RDFXML::Reader.new(io, options).each{|s| add(s)}
       else
         raise UnknownFormatError
       end
@@ -131,6 +133,8 @@ module RubyRDF
       case format
       when :ntriples
         NTriples::Writer.new(self).export(io)
+      when :rdfxml
+        RDFXML::Writer.new(self).export(io)
       else
         raise UnknownFormatError
       end
@@ -144,7 +148,7 @@ module RubyRDF
     #
     # +node+ is a variable if it is a Symbol, or if it is a BNode that is unknown to this graph.
     def variable?(node)
-      node.is_a?(Symbol) || (RubyRDF.bnode?(node) && !known?(node))
+      RubyRDF.bnode?(node) && !known?(node)
     end
 
     # True if this graph is writable, false otherwise.
@@ -303,9 +307,17 @@ module RubyRDF
 
     def query_ruby_bind(statement, binding, clause)
       h = binding.dup
-      h[clause[0]] = statement.subject if RubyRDF.bnode?(clause[0]) && !known?(clause[0])
-      h[clause[1]] = statement.predicate if RubyRDF.bnode?(clause[1]) && !known?(clause[1])
-      h[clause[2]] = statement.object if RubyRDF.bnode?(clause[2]) && !known?(clause[2])
+      if !binding.has_key?(clause[0]) && variable?(clause[0])
+        h[clause[0]] = statement.subject
+      end
+
+      if !binding.has_key?(clause[1]) && variable?(clause[1])
+        h[clause[1]] = statement.predicate
+      end
+
+      if !binding.has_key?(clause[2]) && variable?(clause[2])
+        h[clause[2]] = statement.object
+      end
       h
     end
   end

@@ -112,21 +112,21 @@ describe RubyRDF::MemoryGraph, "with statements" do
 
   describe "query" do
     it "should match bnodes" do
-      @it.add(Object.new, ex::prop, ex::obj)
-      @it.add(a = Object.new, ex::prop, ex::obj)
-      @it.add(a, ex::prop2, ex::obj)
+      @it.add(:a, ex::prop, ex::obj)
+      @it.add(:b, ex::prop, ex::obj)
+      @it.add(:b, ex::prop2, ex::obj)
 
       result = @it.query(RubyRDF::Query.new do |q|
                            q.where(:a, ex::prop, ex::obj)
                            q.where(:a, ex::prop2, ex::obj)
                          end)
       result.size.should == 1
-      result[0][:a].should == a
+      result[0][:a].should == :b
     end
 
     it "should be nil" do
-      @it.add(Object.new, ex::prop, ex::obj)
-      @it.add(Object.new, ex::prop, ex::obj)
+      @it.add(:a, ex::prop, ex::obj)
+      @it.add(:a, ex::prop, ex::obj)
 
       result = @it.query(RubyRDF::Query.new do |q|
                            q.select(:a)
@@ -152,9 +152,9 @@ describe RubyRDF::MemoryGraph, "with statements" do
 
       result = @it.query(RubyRDF::Query.new do |q|
                            q.where(ex::sub, ex::prop, :a)
-                           q.filter{|b|
+                           q.filter do |b|
                              RubyRDF.literal?(b[:a])
-                           }
+                           end
                          end)
       result.size.should == 1
       result[0][:a].should == 2.to_literal

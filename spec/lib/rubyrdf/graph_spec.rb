@@ -73,10 +73,6 @@ describe RubyRDF::Graph do
   end
 
   describe 'variable?' do
-    it 'should be true for a symbol' do
-      @it.variable?(:x).should be_true
-    end
-
     it 'should be true for an unknown BNode' do
       @it.stub!(:known?).and_return(false)
       @it.variable?(Object.new).should be_true

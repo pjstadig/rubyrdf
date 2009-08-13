@@ -34,7 +34,7 @@ module RubyRDF
 
             @base_uri = if base
                           b = Addressable::URI.parse(base.value.to_s)
-                          if b.relative? && parent.base_uri
+                          if !b.absolute? && parent.base_uri
                             parent.base_uri.join(b)
                           else
                             b
@@ -61,7 +61,7 @@ module RubyRDF
 
           def resolve(uri)
             uri = Addressable::URI.parse(uri) unless uri.is_a?(Addressable::URI)
-            if uri.relative? && base_uri
+            if !uri.absolute? && base_uri
               base_uri.join(uri)
             else
               uri
@@ -71,6 +71,58 @@ module RubyRDF
           def has_attribute?(uri)
             a = attributes.select{|a| a.uri == uri}.first
             a if a && a.string_value.present?
+          end
+
+          def name_start_char?(c)
+            (0x41..0x5A).include?(c) ||
+              c == 0x5F ||
+              (0x61..0x7A).include?(c) ||
+              (0xC0..0xD6).include?(c) ||
+              (0xD8..0xF6).include?(c) ||
+              (0xF8..0x2FF).include?(c) ||
+              (0x370..0x37D).include?(c) ||
+              (0x37F..0x1FFF).include?(c) ||
+              (0x200C..0x200D).include?(c) ||
+              (0x2070..0x218F).include?(c) ||
+              (0x2C00..0x2FEF).include?(c) ||
+              (0x3001..0xD7FF).include?(c) ||
+              (0xF900..0xFDCF).include?(c) ||
+              (0xFDF0..0xFFFD).include?(c) ||
+              (0x10000..0xEFFFF).include?(c)
+          end
+
+          def name_char?(c)
+            name_start_char?(c) ||
+              c == 0x2D ||
+              c == 0x2E ||
+              (0x30..0x39).include?(c) ||
+              c == 0xB7 ||
+              (0x0300..0x036F).include?(c) ||
+              (0x203F..0x2040).include?(c)
+          end
+
+          def valid_name?(name)
+            chars = name.unpack("U*")
+            !chars.empty? &&
+              name_start_char?(chars.shift) &&
+              chars.all?{|c| name_char?(c)}
+          end
+
+          def rdf_id
+            if id = has_attribute?(RubyRDF::Namespace::RDF::ID)
+              if valid_name?(id.string_value)
+                id
+              else
+                raise SyntaxError, "rdf:ID must match the XML Name production (as modified by XML namespaces)"
+              end
+            end
+          end
+
+          def inspect
+            content = []
+            content << parent.uri if parent && parent.respond_to?(:uri)
+            content << uri
+            "#<ElementEvent #{content.join(" ")}>"
           end
         end
       end

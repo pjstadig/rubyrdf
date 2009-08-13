@@ -5,12 +5,13 @@ module RubyRDF
 
       attr_reader :io
 
-      def initialize(io)
+      def initialize(io, options = nil)
         @io = io
+        @options = options || {}
       end
 
       def each(&b)
-        Nokogiri::XML::SAX::Parser.new(Document.new(b)).parse(io)
+        Nokogiri::XML::SAX::Parser.new(Document.new(b, @options[:base_uri])).parse(io)
       end
     end
   end

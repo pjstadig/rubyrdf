@@ -9,576 +9,178 @@ describe RubyRDF::RDFXML::Reader do
     RubyRDF::Namespace::XSD
   end
 
-  def compare(xml, *expected)
-    actual = RubyRDF::RDFXML::Reader.new(StringIO.new(xml)).to_set
-    expected.map{|s| s.to_statement}.each do |s|
-      if actual.empty?
-        s.should == nil
-      end
+  def test_file_path(name)
+    File.join(File.dirname(__FILE__), %w[.. .. .. fixtures], name)
+  end
 
-      actual.delete_if{|o|
-        (s.subject == o.subject || s.subject.instance_of?(Object) && o.subject.instance_of?(Object)) &&
-        s.predicate == o.predicate &&
-        (s.object == o.object || s.object.instance_of?(Object) && o.object.instance_of?(Object))
-      }
+  def open_test_file(name)
+    File.open(test_file_path(name), 'r') do |f|
+      yield f
     end
-    actual.should == Set.new
+  end
+
+  def rdfxml_triples(name)
+    open_test_file(name) do |f|
+      RubyRDF::RDFXML::Reader.new(f, :base_uri => "http://www.w3.org/2000/10/rdf-tests/rdfcore/#{name}").each do |s|
+        yield s
+      end
+    end
+  end
+
+  def ntriples_triples(name)
+    open_test_file(name) do |f|
+      RubyRDF::NTriples::Reader.new(f).each do |s|
+        yield s
+      end
+    end
+  end
+
+  def execute_w3c_parser_test(name)
+    actual = RubyRDF::MemoryGraph.new
+    open_test_file("w3c/#{name}.rdf") do |f|
+      actual.import(f, :format => :rdfxml, :base_uri => "http://www.w3.org/2000/10/rdf-tests/rdfcore/#{name}.rdf")
+    end
+
+    query = RubyRDF::Query.new do |q|
+      ntriples_triples("w3c/#{name}.nt") do |s|
+        q.where(s)
+      end
+    end
+
+    if actual.query(query).nil?
+      actual.to_a.should == query.where
+    end
+  end
+
+  def execute_w3c_error_test(name)
+    lambda {
+      open_test_file("w3c/#{name}.rdf") do |f|
+        RubyRDF::MemoryGraph.new.import(f, :format => :rdfxml)
+      end
+    }.should raise_error(RubyRDF::RDFXML::SyntaxError)
   end
 
   it "should pass amp-in-url/test001.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <rdf:Description rdf:about="http://example/q?abc=1&#38;def=2">
-    <rdf:value>xxx</rdf:value>
-  </rdf:Description>
-</rdf:RDF>
-END
-    compare(xml, [Addressable::URI.parse("http://example/q?abc=1&def=2"),
-                  rdf::value,
-                  RubyRDF::PlainLiteral.new("xxx")])
+    execute_w3c_parser_test('amp-in-url/test001')
   end
 
   it "should pass datatypes/test001.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Description: A simple datatype production; a language+
-        datatype production. Simply duplicate the constructs under
-        http://www.w3.org/2000/10/rdf-tests/rdfcore/ntriples/test.nt
-
-  $Id: test001.rdf,v 1.2 2002/11/20 14:51:34 jgrant Exp $
-
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
- <rdf:Description rdf:about="http://example.org/foo">
-   <eg:bar rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</eg:bar>
-   <eg:baz rdf:datatype="http://www.w3.org/2001/XMLSchema#integer" xml:lang="fr">10</eg:baz>
- </rdf:Description>
-
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::foo, ex::bar, 10.to_literal], [ex::foo, ex::baz, 10.to_literal])
+    execute_w3c_parser_test('datatypes/test001')
   end
 
   it "should pass datatypes/test002.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Description: A parser is not required to know about well-formed
-        datatyped literals.
-
-  $Id: test002.rdf,v 1.1 2002/11/19 14:04:16 jgrant Exp $
-
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
- <rdf:Description rdf:about="http://example.org/foo">
-   <eg:bar rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">flargh</eg:bar>
- </rdf:Description>
-
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::foo, ex::bar, RubyRDF::TypedLiteral.new("flargh", xsd::integer)])
+    execute_w3c_parser_test('datatypes/test002')
   end
 
   it "should pass rdf-element-not-mandatory/test001.rdf" do
-    xml = <<END
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Description: the rdf:RDF element is no longer mandatory.
-
-  $Id: test001.rdf,v 1.1 2003/10/08 13:00:58 jgrant Exp $
-
--->
-
-<Book xmlns="http://example.org/terms#">
-  <title>Dogs in Hats</title>
-</Book>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/terms#")
-    compare(xml,
-            [bn = Object.new, rdf::type, ex::Book],
-            [bn, ex::title, RubyRDF::PlainLiteral.new("Dogs in Hats")])
+    execute_w3c_parser_test('rdf-element-not-mandatory/test001')
   end
 
   it "should pass rdfms-reification-required/test001.rdf" do
-    xml = <<END
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-$Id: test001.rdf,v 1.3 2002/04/05 11:32:03 bmcbride Exp $
--->
-<!--
-
- Assumed base URI:
-
-http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfms-reification-required/test001.rdf
-
- Description:
-
- A parser is not required to generate a bag of reified statements for all
- description elements.
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org#">
-  <rdf:Description rdf:about="http://example.org/" eg:prop="10"/>
-</rdf:RDF>
-
-END
-    ex = RubyRDF::Namespace.new("http://example.org#")
-    compare(xml, [Addressable::URI.parse("http://example.org/"),
-                 ex::prop,
-                 RubyRDF::PlainLiteral.new("10")])
+    execute_w3c_parser_test('rdfms-reification-required/test001')
   end
 
   it "should pass rdfms-uri-substructure/test001.rdf" do
-    xml = <<END
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-$Id: test001.rdf,v 1.1 2002/03/29 15:09:58 bmcbride Exp $
--->
-<!--
-
- Description:
-
- Demonstrates the Recommended partitioning of a URI into a namespace
- part and a localname part
-
--->
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-<rdf:Description>
-  <eg:property>10</eg:property>
-</rdf:Description>
-
-</rdf:RDF>
-
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [Object.new, ex::property, RubyRDF::PlainLiteral.new("10")])
+    execute_w3c_parser_test('rdfms-uri-substructure/test001')
   end
 
   it "should pass rdfms-xmllang/test001.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-xmllang
-  Test:  1
-  Author: Dave Beckett
-
-    In-scope xml:lang applies to rdf:parseType="Literal"
-    element content values
-
-
-  $Id: test001.rdf,v 1.2 2002/04/08 14:42:17 dajobe Exp $
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-  <rdf:Description rdf:about="http://example.org/node">
-     <eg:property rdf:parseType="Literal">chat</eg:property>
-  </rdf:Description>
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::node, ex::property, RubyRDF::TypedLiteral.new("chat", rdf::XMLLiteral)])
+    execute_w3c_parser_test('rdfms-xmllang/test001')
   end
 
   it "should pass rdfms-xmllang/test002.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-xmllang
-  Test:  2
-  Author: Dave Beckett
-
-    In-scope xml:lang does not apply to rdf:parseType="Literal"
-    element content values
-
-  $Id: test002.rdf,v 1.3 2003/07/24 19:56:32 dbeckett2 Exp $
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-  <rdf:Description rdf:about="http://example.org/node">
-     <eg:property xml:lang="fr" rdf:parseType="Literal">chat</eg:property>
-  </rdf:Description>
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::node, ex::property, RubyRDF::TypedLiteral.new("chat", rdf::XMLLiteral)])
+    execute_w3c_parser_test('rdfms-xmllang/test002')
   end
 
   it "should pass rdfms-xmllang/test003.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-xmllang
-  Test:  3
-  Author: Dave Beckett
-
-    In-scope xml:lang applies to element content literal values
-
-  $Id: test003.rdf,v 1.1 2002/04/05 22:22:30 dajobe Exp $
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-  <rdf:Description rdf:about="http://example.org/node">
-     <eg:property>chat</eg:property>
-  </rdf:Description>
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::node, ex::property, RubyRDF::PlainLiteral.new("chat")])
+    execute_w3c_parser_test('rdfms-xmllang/test003')
   end
 
   it "should pass rdfms-xmllang/test004.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-xmllang
-  Test:  4
-  Author: Dave Beckett
-
-    In-scope xml:lang applies to element content literal values
-
-  $Id: test004.rdf,v 1.1 2002/04/05 22:22:30 dajobe Exp $
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-  <rdf:Description rdf:about="http://example.org/node">
-     <eg:property xml:lang="fr">chat</eg:property>
-  </rdf:Description>
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::node, ex::property, RubyRDF::PlainLiteral.new("chat", "fr")])
+    execute_w3c_parser_test('rdfms-xmllang/test004')
   end
 
   it "should pass rdfms-xmllang/test005.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-xmllang
-  Test:  5
-  Author: Dave Beckett
-
-    In-scope xml:lang applies to attribute content literal values
-
-  $Id: test005.rdf,v 1.1 2002/04/05 22:22:30 dajobe Exp $
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-  <rdf:Description rdf:about="http://example.org/node"
-                   eg:property="chat" />
-
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::node, ex::property, RubyRDF::PlainLiteral.new("chat")])
+    execute_w3c_parser_test('rdfms-xmllang/test005')
   end
 
   it "should pass rdfms-xmllang/test006.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-xmllang
-  Test:  6
-  Author: Dave Beckett
-
-    In-scope xml:lang applies to attribute content literal values
-
-  $Id: test006.rdf,v 1.1 2002/04/05 22:22:30 dajobe Exp $
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-  <rdf:Description rdf:about="http://example.org/node"
-                   xml:lang="fr"
-                   eg:property="chat" />
-
-</rdf:RDF>
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [ex::node, ex::property, RubyRDF::PlainLiteral.new("chat", "fr")])
+    execute_w3c_parser_test('rdfms-xmllang/test006')
   end
 
   it "should pass unrecognised-xml-attributes/test001.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Description: Test case for the proposal:
-    Unrecognized attributes in the xml namespace should be ignored.
-
-  in http://lists.w3.org/Archives/Public/w3c-rdfcore-wg/2002Jan/0152.html
-
-
-  Related issue:
-
-    NONE
-
-  $Id: test001.rdf,v 1.1 2002/04/13 13:30:00 jgrant Exp $
--->
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:ex="http://example.org/schema#">
-  <rdf:Description rdf:about="http://example.org/thing">
-    <ex:prop1 xml:space="default">blah</ex:prop1>
-    <ex:prop2 xml:foo="anything">more</ex:prop2>
-  </rdf:Description>
-</rdf:RDF>
-
-END
-    thing = Addressable::URI.parse("http://example.org/thing")
-    ex = RubyRDF::Namespace.new("http://example.org/schema#")
-    compare(xml,
-            [thing, ex::prop1, RubyRDF::PlainLiteral.new("blah")],
-            [thing, ex::prop2, RubyRDF::PlainLiteral.new("more")])
+    execute_w3c_parser_test('unrecognised-xml-attributes/test001')
   end
 
   it "should pass unrecognised-xml-attributes/test002.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Description: Test case for the proposal:
-    Unrecognized attributes in the xml namespace should be ignored.
-
-  in http://lists.w3.org/Archives/Public/w3c-rdfcore-wg/2002Jan/0152.html
-
-  Although here it is not testing something in the xml namespace; but
-  showing that an attribute that XML reserves is ignored.
-
-  Related issue:
-
-    NONE
-
-  $Id: test002.rdf,v 1.1 2002/04/13 13:30:00 jgrant Exp $
--->
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:ex="http://example.org/schema#">
-  <rdf:Description rdf:about="http://example.org/thing">
-    <ex:prop1 xmlnewthing="anything">stuff</ex:prop1>
-  </rdf:Description>
-</rdf:RDF>
-
-END
-    thing = Addressable::URI.parse("http://example.org/thing")
-    ex = RubyRDF::Namespace.new("http://example.org/schema#")
-    compare(xml, [thing, ex::prop1, RubyRDF::PlainLiteral.new("stuff")])
+    execute_w3c_parser_test('unrecognised-xml-attributes/test002')
   end
 
-  it "should pass xml-cannon/test001.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
-
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, European Research Consortium for Informatics and
-  Mathematics, Keio University).
-
-  All Rights Reserved.
-
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
-
-  Description: Demonstrating XML Literal canonicalisation
-
-  $Id: test001.rdf,v 1.1 2003/08/18 10:09:29 jgrant Exp $
-
--->
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
-
-
-  <rdf:Description rdf:about="http://www.example.org/a">
-    <eg:prop rdf:parseType="Literal"><br /></eg:prop>
-  </rdf:Description>
-
-</rdf:RDF>
-
-END
-    ex = RubyRDF::Namespace.new("http://example.org/")
-    compare(xml, [Addressable::URI.parse("http://www.example.org/a"),
-                  ex::prop,
-                  RubyRDF::TypedLiteral.new("<br></br>", rdf::XMLLiteral)])
+  it "should pass xml-canon/test001.rdf" do
+    execute_w3c_parser_test('xml-canon/test001')
   end
 
   it "should pass rdfms-abouteach/error001.rdf" do
-    xml = <<END
-<?xml version="1.0"?>
+    execute_w3c_error_test('rdfms-abouteach/error001')
+  end
 
-<!--
-  Copyright World Wide Web Consortium, (Massachusetts Institute of
-  Technology, Institut National de Recherche en Informatique et en
-  Automatique, Keio University).
+  it "should pass rdfms-abouteach/error002.rdf" do
+    execute_w3c_error_test('rdfms-abouteach/error002')
+  end
 
-  All Rights Reserved.
+  it "should pass rdfms-rdf-id/error001.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error001')
+  end
 
-  Please see the full Copyright clause at
-  <http://www.w3.org/Consortium/Legal/copyright-software.html>
+  it "should pass rdfms-rdf-id/error002.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error002')
+  end
 
-  Issue: http://www.w3.org/2000/03/rdf-tracking/#rdfms-abouteach
-  Test:  1 (error)
-  Author: Dave Beckett
+  it "should pass rdfms-rdf-id/error003.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error003')
+  end
 
-    aboutEach removed from the RDF specifications.
-    See URI above for further details.
+  it "should pass rdfms-rdf-id/error004.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error004')
+  end
 
+  it "should pass rdfms-rdf-id/error005.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error005')
+  end
 
-  $Id: error001.rdf,v 1.1 2002/04/05 23:01:15 dajobe Exp $
--->
+  it "should pass rdfms-rdf-id/error006.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error006')
+  end
 
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:eg="http://example.org/">
+  it "should pass rdfms-rdf-id/error007.rdf" do
+    execute_w3c_error_test('rdfms-rdf-id/error007')
+  end
 
-  <rdf:Bag rdf:ID="node">
-    <rdf:li rdf:resource="http://example.org/node2"/>
-  </rdf:Bag>
+  it "should pass rdf-containers-syntax-vs-schema/test001.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test001')
+  end
 
-  <rdf:Description rdf:aboutEach="#node">
-    <dc:rights xmlns:dc="http://purl.org/dc/elements/1.1/">me</dc:rights>
+  it "should pass rdf-containers-syntax-vs-schema/test002.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test002')
+  end
 
-  </rdf:Description>
+  it "should pass rdf-containers-syntax-vs-schema/test003.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test003')
+  end
 
-</rdf:RDF>
-END
-    lambda {
-      RubyRDF::RDFXML::Reader.new(StringIO.new(xml)).to_set
-    }.should raise_error(RubyRDF::RDFXML::SyntaxError)
+  it "should pass rdf-containers-syntax-vs-schema/test004.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test004')
+  end
+
+  it "should pass rdf-containers-syntax-vs-schema/test006.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test006')
+  end
+
+  it "should pass rdf-containers-syntax-vs-schema/test007.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test007')
+  end
+
+  it "should pass rdf-containers-syntax-vs-schema/test008.rdf" do
+    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test008')
   end
 end

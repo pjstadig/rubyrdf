@@ -29,6 +29,10 @@ module RubyRDF
                      raise SyntaxError, "Non-namespaced attributes are not allowed"
                    end
           end
+
+          def inspect
+            "#<AttributeEvent #{uri}>"
+          end
         end
       end
     end

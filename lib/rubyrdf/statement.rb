@@ -10,8 +10,10 @@ module RubyRDF
     def initialize(subject, predicate, object)
       @subject = if subject.respond_to?(:to_uri)
                    subject.to_uri
-                 else
+                 elsif !subject.nil?
                    subject
+                 else
+                   raise InvalidStatementError, "#{subject} is not a valid subject"
                  end
 
       @predicate = if predicate.respond_to?(:to_uri)
@@ -24,8 +26,10 @@ module RubyRDF
                   object.to_uri
                 elsif object.respond_to?(:to_literal)
                   object.to_literal
-                else
+                elsif !object.nil?
                   object
+                else
+                  raise InvalidStatementError, "#{object} is not a valid object"
                 end
     end
 
@@ -44,7 +48,7 @@ module RubyRDF
     end
 
     def inspect
-      "#<#{self.class} #{to_ntriples.strip.chomp('.')}>"
+      "#<#{self.class} #{node_ntriples(@subject)}, #{node_ntriples(@predicate)}, #{node_ntriples(@object)}>"
     end
 
     def to_statement
@@ -57,6 +61,11 @@ module RubyRDF
 
     def to_ntriples
       MemoryGraph.new(self).export
+    end
+
+    private
+    def node_ntriples(node)
+      node.respond_to?(:to_ntriples) ? node.to_ntriples : node.to_s
     end
   end
 end

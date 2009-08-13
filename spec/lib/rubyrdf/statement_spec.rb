@@ -10,6 +10,24 @@ describe RubyRDF::Statement do
   end
 
   describe "#initialize" do
+    it "should raise InvalidStatementError with nil subject" do
+      lambda {
+        RubyRDF::Statement.new(nil, rdf::predicate, rdf::Property)
+      }.should raise_error(RubyRDF::InvalidStatementError)
+    end
+
+    it "should raise InvalidStatementError with nil predicate" do
+      lambda {
+        RubyRDF::Statement.new(rdf::subject, nil, rdf::Property)
+      }.should raise_error(RubyRDF::InvalidStatementError)
+    end
+
+    it "should raise InvalidStatementError with nil object" do
+      lambda {
+        RubyRDF::Statement.new(rdf::subject, rdf::predicate, nil)
+      }.should raise_error(RubyRDF::InvalidStatementError)
+    end
+
     it "should raise InvalidStatementError with literal predicate" do
       lambda {
         RubyRDF::Statement.new(rdf::subject, 2.to_literal, rdf::Property)
@@ -102,8 +120,8 @@ describe RubyRDF::Statement do
   end
 
   describe "inspect" do
-    it "should use NTriples export" do
-      @it.inspect.should == "#<RubyRDF::Statement #{@it.to_ntriples.strip.chomp('.')}>"
+    it "should use NTriples format of nodes" do
+      @it.inspect.should == "#<RubyRDF::Statement <#{@it.subject}>, <#{@it.predicate}>, <#{@it.object}>>"
     end
   end
 end
