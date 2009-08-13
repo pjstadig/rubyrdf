@@ -11,6 +11,7 @@ module RubyRDF
           @current = nil
           @states = []
           @bnodes = {}
+          @ids = {}
           @nodes = []
           @literal_root = nil
           @literal_current = nil
@@ -20,6 +21,7 @@ module RubyRDF
           @parent = nil
           @parse_mode = :normal
           @literal_start = nil
+          @eos = false
         end
 
         # SAX callbacks
@@ -31,6 +33,7 @@ module RubyRDF
 
         def end_document
           @events << EndDocumentEvent.new
+          @eos = true
           while @events.any?
             dispatch
           end
@@ -81,7 +84,7 @@ module RubyRDF
 
         # Handlers
         def parse
-          while peek_type?(ElementEvent, 2)
+          while peek_type?(ElementEvent, 2) && (@events.size >= 1000 || @eos)
             dispatch
           end
         end
@@ -123,24 +126,22 @@ module RubyRDF
         def handle_event
           case @current
           when RootEvent
-          when EndDocumentEvent
-            handle_end_document
           when ElementEvent, TextEvent
             handle_start_element
           when EndElementEvent
             handle_end_element
-          #when TextEvent
-          #  handle_text
+          when EndDocumentEvent
+            while [:wses].include?(@states.last)
+              @states.pop
+            end
+
+            if @states.last == :end_document
+              @states.pop
+            elsif @states.any?
+              syntax_error("Unexpected end of document, expected #{@states.last}")
+            end
           else
             raise "Unknown event type"
-          end
-        end
-
-        def handle_end_document
-          if @states.last == :end_document
-            @states.pop
-          elsif @states.any?
-            syntax_error("Unexpected end of document, expected #{@states.last}")
           end
         end
 
@@ -148,25 +149,16 @@ module RubyRDF
           if @states.empty?
             start_grammar
           elsif @states.last == :end_element
-            syntax_error("Expected end element not #{@current.uri}")
+            syntax_error("Expected end element not #{@current.inspect}")
           elsif @states.last == :end_document
-            syntax_error("Expected end of document not #{@current.uri}")
+            syntax_error("Expected end of document not #{@current.inspect}")
           else
             send(@states.last)
           end
         end
 
-        def handle_text
-          unless @current.string.blank?
-            if @states.last == :parse_type_literal_property_elt
-              node = Nokogiri::XML::Text.new(@current.string, @literal_root.document)
-              @literal_current << node
-            end
-          end
-        end
-
         def handle_end_element
-          while [:node_element_list, :property_elt_list].include?(@states.last)
+          while [:node_element_list, :property_elt_list, :wses].include?(@states.last)
             @states.pop
           end
 
@@ -192,15 +184,10 @@ module RubyRDF
            RDF::datatype].include?(uri)
         end
 
-        def li?(uri)
-          RDF::li == uri# ||
-            #uri =~ %r{http://www.w3.org/1999/02/22-rdf-syntax-ns#_\d+}
-        end
-
         def syntax_terms?(uri)
           core_syntax_terms?(uri) ||
             RDF::Description == uri ||
-            li?(uri)
+            RDF::li == uri
         end
 
         def old_terms?(uri)
@@ -212,7 +199,7 @@ module RubyRDF
 
         def node_element_uris?(uri)
           !core_syntax_terms?(uri) &&
-            !li?(uri) &&
+            RDF::li != uri &&
             !old_terms?(uri)
         end
 
@@ -223,9 +210,9 @@ module RubyRDF
         end
 
         def property_attribute_uris?(uri)
+          syntax_error("rdf:li is not allowed as an element") if RDF::li == uri
           !core_syntax_terms?(uri) &&
             RDF::Description != uri &&
-            !li?(uri) &&
             !old_terms?(uri)
         end
 
@@ -252,6 +239,7 @@ module RubyRDF
 
         def doc
           @states.push(:end_document)
+          #@states.push(:wses)
           rdf
         end
 
@@ -294,6 +282,7 @@ module RubyRDF
           if ws?
             ws
           else
+            @states.push(:wses)
             node_element
           end
         end
@@ -307,7 +296,10 @@ module RubyRDF
           raise SyntaxError, "Expected nodeElement not #{@current.inspect}" unless node_element?
 
           if id = @current.rdf_id
-            @current.subject = @current.resolve("##{id.string_value}")
+            uri = @current.resolve("##{id.string_value}")
+            syntax_error("rdf:ID #{uri} is already in use") if @ids.has_key?(uri)
+            @ids[uri] = uri
+            @current.subject = uri
           end
 
           if node_id = @current.has_attribute?(RDF::nodeID)
@@ -341,7 +333,7 @@ module RubyRDF
           @states.push(:end_element)
           @states.push(:property_elt_list)
 
-          @current
+          @last_node = @current
         end
 
         def property_attrs(attributes)
@@ -389,12 +381,15 @@ module RubyRDF
           elsif parse_type_other_property_elt?
             parse_type_other_property_elt
           elsif resource_property_elt?
+            if @current.attributes.any?{|a| a.uri != RDF::ID}
+              syntax_error("Only rdf:id is allowed as a property of resourcePropertyElt")
+            end
             @states.push(:end_element)
             @states.push(:resource_property_elt)
-          elsif literal_property_elt?
-            literal_property_elt
           elsif empty_property_elt?
             empty_property_elt
+          elsif literal_property_elt?
+            literal_property_elt
           else
             syntax_error("Expected propertyElt")
           end
@@ -434,6 +429,9 @@ module RubyRDF
 
         def literal_property_elt
           syntax_error("Expected literalPropertyElt") unless literal_property_elt?
+          if @current.attributes.any?{|a| ![RDF::ID, RDF::datatype].include?(a.uri)}
+            syntax_error("Only rdf:id and rdf:datatype are allowed as properties of literalPropertyElt")
+          end
 
           datatype = @current.has_attribute?(RDF::datatype)
           datatype = datatype && datatype.string_value
@@ -467,7 +465,10 @@ module RubyRDF
         end
 
         def parse_type_literal_property_elt
-          #?@states.pop
+          if @current.attributes.any?{|a| ![RDF::ID, RDF::parseType].include?(a.uri)}
+            syntax_error("Only rdf:id and rdf:datatype are allowed as properties of parseTypeLiteralPropertyElt")
+          end
+
           @states.push(:end_parse_type_literal_property_elt)
           @literal_doc = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
           @literal_start = @current
@@ -491,6 +492,10 @@ module RubyRDF
         end
 
         def parse_type_resource_property_elt
+          if @current.attributes.any?{|a| ![RDF::ID, RDF::parseType].include?(a.uri)}
+            syntax_error("Only rdf:id and rdf:datatype are allowed as properties of parseTypeResourcePropertyElt")
+          end
+
           n = @bnodes[RubyRDF.generate_bnode_name] = Object.new
           @block.call(s = Statement.new(@current.parent.subject,
                                         @current.uri,
@@ -510,6 +515,54 @@ module RubyRDF
           return false unless event.is_a?(ElementEvent)
           a = event.has_attribute?(RDF::parseType)
           a && a.string_value == "Collection"
+        end
+
+        def parse_type_collection_property_elt
+          if @current.attributes.any?{|a| ![RDF::ID, RDF::parseType].include?(a.uri)}
+            syntax_error("Only rdf:id and rdf:datatype are allowed as properties of parseTypeCollectionPropertyElt")
+          end
+
+          if peek.is_a?(EndElementEvent)
+            @block.call(s = Statement.new(@current.parent.subject,
+                                          @current.uri,
+                                          RDF::nil))
+
+            reify(s, @current)
+          else
+            @states.push(:parse_type_collection_property_elt_first)
+            @states.push(:end_element)
+            @states.push(:wses)
+            @states.push(:node_element)
+            @states.push(:wses)
+          end
+        end
+
+        def parse_type_collection_property_elt_first
+          @states.pop
+
+          n = Object.new
+          @block.call(s = Statement.new(@last_node.parent.parent.subject,
+                                        @last_node.parent.uri,
+                                        n))
+          reify(s, @last_node.parent)
+
+          @block.call(Statement.new(n, RDF::first, @last_node.uri))
+          @last_cons = n
+          @states.push(:parse_type_collection_property_elt_next)
+          @states.push(:end_element)
+          @states.push(:node_element_list)
+        end
+
+        def parse_type_collection_property_elt_next
+          o = Object.new
+          @block.call(Statement.new(o, RDF::first, @current.uri))
+          @block.call(Statement.new(@last_cons, RDF::rest, o))
+          @last_cons = o
+
+          if peek.is_a?(EndElementEvent)
+            @block.call(Statement.new(o, RDF::rest, RDF::nil))
+            @states.pop
+          end
         end
 
         def parse_type_other_property_elt?(event = @current)
@@ -561,13 +614,15 @@ module RubyRDF
                                           node))
 
             reify(s, @current)
-            @states.push(:end_element)
           end
+          @states.push(:end_element)
         end
 
         def reify(statement, current)
           if id = current.rdf_id
             uri = current.resolve("##{id.string_value}")
+            syntax_error("rdf:ID #{uri} is already in use") if @ids.has_key?(uri)
+            @ids[uri] = uri
             @block.call(Statement.new(uri, RDF::subject, statement.subject))
             @block.call(Statement.new(uri, RDF::predicate, statement.predicate))
             @block.call(Statement.new(uri, RDF::object, statement.object))

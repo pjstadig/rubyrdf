@@ -49,8 +49,9 @@ module RubyRDF
       end
     end
 
-    def import(data, format = :ntriples) #:nodoc:
-      headers = case format
+    def import(data, options = nil) #:nodoc:
+      {:format => :ntriples}.merge(options || {})
+      headers = case options.delete(:format)
                 when :ntriples
                   {'Content-Type' => 'text/plain; charset=utf-8'}
                 when :rdfxml

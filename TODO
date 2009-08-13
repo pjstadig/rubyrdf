@@ -6,7 +6,7 @@
 - URI graph
 - Federated graph
 * SPARQL query implementation
-* Ruby-based query module?
+* Move the Ruby query execution into the Query class
 * Reasoner and rules
 * to_f
 * to_i
@@ -16,3 +16,6 @@
 * to_date
 * to_time
 * to_ruby
+* Why are the RDF/XML tests so slow?
+* New (streaming) HTTP library for Sesame graph
+* Update import/export signatures in Sesame

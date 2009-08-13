@@ -16,13 +16,7 @@ module RubyRDF
           def initialize(parent, local_name, namespace_name, attributes)
             @parent = parent
             @local_name = local_name.to_s
-            @namespace_name = if namespace_name &&
-                                  namespace_name.to_s[-1,1] != '/' &&
-                                  namespace_name.to_s[-1,1] != '#'
-                                namespace_name.to_s + '/'
-                              else
-                                namespace_name.to_s
-                              end
+            @namespace_name = namespace_name.to_s
 
             lang = attributes.select do |a|
               "#{a.uri}/#{a.localname}" == XML::lang.to_s

@@ -13,12 +13,7 @@ module RubyRDF
             @parent = parent
             @local_name = attribute.localname.to_s
             @namespace_name = if attribute.uri
-                                if attribute.uri.to_s[-1,1] != '/' &&
-                                    attribute.uri.to_s[-1,1] != '#'
-                                  attribute.uri.to_s + '/'
-                                else
-                                  attribute.uri.to_s
-                                end
+                                attribute.uri.to_s
                               end
             @string_value = attribute.value.to_s.gsub(/&#(\d+);/){|m| [$1.to_i].pack("U")}
             @uri = if @namespace_name

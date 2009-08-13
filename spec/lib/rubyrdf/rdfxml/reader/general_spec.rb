@@ -1,64 +1,7 @@
-require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. spec_helper]))
+require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. .. .. spec_helper]))
 
-describe RubyRDF::RDFXML::Reader do
-  def rdf
-    RubyRDF::Namespace::RDF
-  end
-
-  def xsd
-    RubyRDF::Namespace::XSD
-  end
-
-  def test_file_path(name)
-    File.join(File.dirname(__FILE__), %w[.. .. .. fixtures], name)
-  end
-
-  def open_test_file(name)
-    File.open(test_file_path(name), 'r') do |f|
-      yield f
-    end
-  end
-
-  def rdfxml_triples(name)
-    open_test_file(name) do |f|
-      RubyRDF::RDFXML::Reader.new(f, :base_uri => "http://www.w3.org/2000/10/rdf-tests/rdfcore/#{name}").each do |s|
-        yield s
-      end
-    end
-  end
-
-  def ntriples_triples(name)
-    open_test_file(name) do |f|
-      RubyRDF::NTriples::Reader.new(f).each do |s|
-        yield s
-      end
-    end
-  end
-
-  def execute_w3c_parser_test(name)
-    actual = RubyRDF::MemoryGraph.new
-    open_test_file("w3c/#{name}.rdf") do |f|
-      actual.import(f, :format => :rdfxml, :base_uri => "http://www.w3.org/2000/10/rdf-tests/rdfcore/#{name}.rdf")
-    end
-
-    query = RubyRDF::Query.new do |q|
-      ntriples_triples("w3c/#{name}.nt") do |s|
-        q.where(s)
-      end
-    end
-
-    if actual.query(query).nil?
-      actual.to_a.should == query.where
-    end
-  end
-
-  def execute_w3c_error_test(name)
-    lambda {
-      open_test_file("w3c/#{name}.rdf") do |f|
-        RubyRDF::MemoryGraph.new.import(f, :format => :rdfxml)
-      end
-    }.should raise_error(RubyRDF::RDFXML::SyntaxError)
-  end
+describe RubyRDF::RDFXML::Reader, "general" do
+  include RDFXMLHelper
 
   it "should pass amp-in-url/test001.rdf" do
     execute_w3c_parser_test('amp-in-url/test001')
@@ -154,33 +97,5 @@ describe RubyRDF::RDFXML::Reader do
 
   it "should pass rdfms-rdf-id/error007.rdf" do
     execute_w3c_error_test('rdfms-rdf-id/error007')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test001.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test001')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test002.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test002')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test003.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test003')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test004.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test004')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test006.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test006')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test007.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test007')
-  end
-
-  it "should pass rdf-containers-syntax-vs-schema/test008.rdf" do
-    execute_w3c_parser_test('rdf-containers-syntax-vs-schema/test008')
   end
 end
