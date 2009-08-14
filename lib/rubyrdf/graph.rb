@@ -17,7 +17,9 @@ module RubyRDF
     # Raises NotWritableError, if the graph is not writable.
     # Raises InvalidStatementError, if +statement+ is invalid.
     def add(*statement); writable!; raise NotImplementedError end
-    alias_method :<<, :add
+
+    # Alias for add
+    def <<(*statement); add(*statement) end
 
     # Deletes +statement+ from the graph.
     #
@@ -97,12 +99,15 @@ module RubyRDF
       size == 0
     end
 
-    # Imports RDF statements from +io+ in the specified +format+ into the graph. Valid values for
-    # +format+ are:
-    # * :ntriples
-    # * :rdfxml
+    # Imports RDF statements from +io+ into the graph.
     #
-    # If +format+ is not given, then :ntriples is assumed.
+    # Options include:
+    # [:format]   valid values are: +:ntriples+ and +:rdfxml+
+    # [:base-uri] the base URI used to resolve relative URIs during import
+    #
+    # If +:format+ is not given, then +:ntriples+ is assumed.
+    #
+    # Raises RubyRDF::UnknownFormatError if :format is not a valid value.
     def import(io, options = nil)
       writable!
       options = {:format => :ntriples}.merge(options || {})
@@ -117,25 +122,28 @@ module RubyRDF
       end
     end
 
-    # Exports the graph to +io+ in the specified +format+. Valid values for +format+ are:
-    # * :ntriples
-    # * :rdfxml
+    # Exports the graph to +io+.
     #
-    # If no +io+ is given, then a StringIO will be used, and the exported graph will be
-    # returned.  Otherwise, +nil+ is returned.
+    # Options include:
+    # [:format] valid values are +:ntriples+ and +:rdfxml+
     #
-    # If +format+ is not given, then :ntriples is assumed.
-    def export(format = nil, io = nil)
-      format ||= :ntriples
+    # If no +io+ is given, then the graph will be serialized into a string
+    # and the string will be returned.  Otherwise, +nil+ is returned.
+    #
+    # If +:format+ is not given, then :ntriples is assumed.
+    #
+    # Raises RubyRDF::UnknownFormatError if :format is not a valid value.
+    def export(io = nil, options = nil)
+      options = {:format => :ntriples}.merge(options || {})
 
       string_io = io.nil?
       io ||= StringIO.new
 
-      case format
+      case options.delete(:format)
       when :ntriples
-        NTriples::Writer.new(self).export(io)
+        NTriples::Writer.new(self, options).export(io)
       when :rdfxml
-        RDFXML::Writer.new(self).export(io)
+        RDFXML::Writer.new(self, options).export(io)
       else
         raise UnknownFormatError
       end
@@ -177,7 +185,11 @@ module RubyRDF
       each{|s| delete(s)}
       true
     end
-    alias_method :clear, :delete_all
+
+    # Alias for delete_all
+    def clear
+      delete_all
+    end
 
     #--
     # TODO document reify

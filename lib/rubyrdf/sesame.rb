@@ -49,8 +49,9 @@ module RubyRDF
       end
     end
 
-    def import(data, options = nil) #:nodoc:
-      {:format => :ntriples}.merge(options || {})
+    # TODO use streaming
+    def import(io, options = nil) #:nodoc:
+      options = {:format => :ntriples}.merge(options || {})
       headers = case options.delete(:format)
                 when :ntriples
                   {'Content-Type' => 'text/plain; charset=utf-8'}
@@ -58,7 +59,25 @@ module RubyRDF
                   {'Content-Type' => 'application/rdf+xml; charset=utf-8'}
                 end
 
-      post_request(repo_path("statements"), data, {}, headers).read
+      post_request(repo_path("statements"), io.read, {}, headers).read
+    end
+
+    def export(io = nil, options = nil) #:nodoc:
+      options = {:format => :ntriples}.merge(options || {})
+      headers = case options.delete(:format)
+                when :ntriples
+                  {'Accept' => 'text/plain; charset=utf-8'}
+                when :rdfxml
+                  {'Accept' => 'application/rdf+xml; charset=utf-8'}
+                end
+      string_io = io.nil?
+      io ||= StringIO.new
+
+      io.write(get_request(repo_path("statements"), {}, headers).read)
+
+      if string_io
+        io.string
+      end
     end
 
     def delete_all #:nodoc:
@@ -208,7 +227,7 @@ module RubyRDF
       elsif node.is_a?(PlainLiteral)
         attrs = {}
         if node.language_tag
-          attrs[:"xml:lang"] = node.language_tag
+          attrs[:"xml:lang"] = node.language_tag # TODO is this a bug?
         end
 
         b.literal(node.lexical_form, attrs)
@@ -224,7 +243,7 @@ module RubyRDF
       if params.empty?
         path
       else
-        path + "?" + params.map{|k, v| "#{k}=#{Addressable::URI.escape(v)}"}.join("&")
+        path + "?" + params.map{|k, v| "#{k}=#{Addressable::URI.escape(v).gsub("?", "%3F").gsub("&", "%26")}"}.join("&")
       end
     end
   end

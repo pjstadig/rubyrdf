@@ -40,6 +40,14 @@ describe RubyRDF::Sesame do
     end
   end
 
+  describe "clear" do
+    it "should not call delete" do
+      @graph.add(ex::sub, ex::pred, ex::obj)
+      @graph.should_not_receive(:delete)
+      @graph.clear
+    end
+  end
+
   it "should be writable" do
     @graph.should be_writable
   end
@@ -54,7 +62,7 @@ describe RubyRDF::Sesame do
   end
 
   it "should import data" do
-    @graph.import(<<-ENDL, :ntriples)
+    @graph.import(StringIO.new(<<-ENDL), :format => :ntriples)
       <#{ex::a}> <#{ex::b}> <#{ex::c}>.
       <#{ex::d}> <#{ex::b}> <#{ex::e}>.
     ENDL
@@ -69,6 +77,16 @@ describe RubyRDF::Sesame do
     @graph.should be_empty
   end
 
+  it "should delete statement with URI that includes query" do
+    s = RubyRDF::Statement.new(Addressable::URI.parse("http://example.org/q?abc=1&def=2"),
+                      ex::pred,
+                      ex::obj)
+    @graph.add(s)
+    @graph.should_not be_empty
+    @graph.delete(s)
+    @graph.should be_empty
+  end
+
   it "should execute SPARQL select query" do
     @graph.add(ex::a, ex::b, RubyRDF::PlainLiteral.new('test'))
     @graph.add(ex::d, ex::b, RubyRDF::PlainLiteral.new('test', 'en'))
@@ -76,7 +94,7 @@ describe RubyRDF::Sesame do
     @graph.add(ex::d, ex::b, ex::e)
     @graph.add(ex::d, ex::b, Object.new)
 
-    result = @graph.select("SELECT ?y WHERE {?x <#{ex::b}> ?y . }")
+    result = @graph.select("SELECT ?y WHERE { ?x <#{ex::b}> ?y . }")
     result.size.should == 5
     result.any?{|r| r['y'] == RubyRDF::PlainLiteral.new('test')}.should be_true
     result.any?{|r| r['y'] == RubyRDF::PlainLiteral.new('test', 'en')}.should be_true

@@ -3,7 +3,7 @@ module RubyRDF
     class Writer
       attr_reader :graph
 
-      def initialize(graph)
+      def initialize(graph, options = nil)
         @graph = graph
         @bnodes = {}
       end

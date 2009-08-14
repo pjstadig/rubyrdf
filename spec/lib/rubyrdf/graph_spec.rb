@@ -24,6 +24,7 @@ describe RubyRDF::Graph do
 
   describe 'add_all' do
     it 'should add all statements to graph' do
+      @it.stub!(:writable?).and_return(true)
       @it.should_receive(:add).with(ex::a, ex::b, ex::c)
       @it.should_receive(:add).with(ex::d, ex::e, ex::f)
 
@@ -45,14 +46,15 @@ describe RubyRDF::Graph do
 
   describe "export" do
     it "should raise UnknownFormat error" do
+      @it.stub!(:each)
       lambda{
-        @it.export(:bogus)
+        @it.export(nil, :format => :bogus)
       }.should raise_error(RubyRDF::UnknownFormatError)
     end
 
     it "should default to NTriples" do
       RubyRDF::NTriples::Writer.should_receive(:new).
-        with(@it).and_return(ntriples = mock("ntriples"))
+        with(@it, {}).and_return(ntriples = mock("ntriples"))
       ntriples.should_receive(:export).with(an_instance_of(StringIO))
       @it.export
     end
@@ -61,14 +63,14 @@ describe RubyRDF::Graph do
   describe "export with io" do
     it "should be nil" do
       @it.should_receive(:each).and_yield(RubyRDF::Statement.new(ex::a, ex::b, ex::c))
-      @it.export(:ntriples, StringIO.new).should be_nil
+      @it.export(StringIO.new, :format => :ntriples).should be_nil
     end
 
     it "should call puts on io" do
       @it.should_receive(:each).and_yield(RubyRDF::Statement.new(ex::a, ex::b, ex::c))
       io = mock("io")
       io.should_receive(:puts).with("<#{ex::a}> <#{ex::b}> <#{ex::c}>.")
-      @it.export(:ntriples, io).should be_nil
+      @it.export(io, :format => :ntriples).should be_nil
     end
   end
 
