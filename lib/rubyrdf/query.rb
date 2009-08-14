@@ -1,4 +1,6 @@
 module RubyRDF
+  #--
+  # TODO to_sparql
   class Query
     def initialize
       @select = []

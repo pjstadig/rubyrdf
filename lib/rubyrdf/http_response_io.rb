@@ -1,9 +1,12 @@
 module RubyRDF
   class HTTPResponseIO
     def initialize()
+      @pos = 0
+      @lineno = 1
       @semaphore = Mutex.new
       @eos = false
       @buffer = StringIO.new
+      @saw_cr = false
     end
 
     def eof?
@@ -15,6 +18,12 @@ module RubyRDF
     def eos=(flag)
       @semaphore.synchronize {
         @eos = flag
+      }
+    end
+
+    def rewind
+      @semaphore.synchronize {
+        @buffer.rewind
       }
     end
 
@@ -42,10 +51,32 @@ module RubyRDF
       buff.string
     end
 
+    def lineno
+      @semaphore.synchronize {
+        @lineno
+      }
+    end
+
+    def pos
+      @semaphore.synchronize {
+        @pos
+      }
+    end
+
     def getc
       wait(2)
       @semaphore.synchronize {
-        @buffer.getc
+        @pos += 1
+        c = @buffer.getc
+        if c == 0xD
+          @saw_cr = true
+          @lineno += 1
+        elsif c == 0xA && !@saw_cr
+          @lineno += 1
+        else
+          @saw_cr = false
+        end
+        c
       }
     end
 

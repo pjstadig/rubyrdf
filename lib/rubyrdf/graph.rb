@@ -104,6 +104,7 @@ module RubyRDF
     #
     # If +format+ is not given, then :ntriples is assumed.
     def import(io, options = nil)
+      writable!
       options = {:format => :ntriples}.merge(options || {})
 
       case options.delete(:format)
@@ -162,6 +163,7 @@ module RubyRDF
     # Raises NotWritableError if the graph is not writable.
     # Raises InvalidStatementError, if any of the statements are invalid.
     def add_all(*statements)
+      writable!
       statements.each{|s| add(*s)}
     end
 
