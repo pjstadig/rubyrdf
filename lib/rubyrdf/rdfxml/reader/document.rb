@@ -22,6 +22,8 @@ module RubyRDF
           @parse_mode = :normal
           @literal_start = nil
           @eos = false
+          @last_node = nil
+          @last_event = nil
         end
 
         # SAX callbacks
@@ -124,12 +126,11 @@ module RubyRDF
         end
 
         def handle_event
+          p @current if $debug
           case @current
           when RootEvent
-          when ElementEvent, TextEvent
+          when ElementEvent, TextEvent, EndElementEvent
             handle_start_element
-          when EndElementEvent
-            handle_end_element
           when EndDocumentEvent
             while [:wses].include?(@states.last)
               @states.pop
@@ -143,13 +144,12 @@ module RubyRDF
           else
             raise "Unknown event type"
           end
+          p @states if $debug
         end
 
         def handle_start_element
           if @states.empty?
             start_grammar
-          elsif @states.last == :end_element
-            syntax_error("Expected end element not #{@current.inspect}")
           elsif @states.last == :end_document
             syntax_error("Expected end of document not #{@current.inspect}")
           else
@@ -157,12 +157,12 @@ module RubyRDF
           end
         end
 
-        def handle_end_element
-          while [:node_element_list, :property_elt_list, :wses].include?(@states.last)
-            @states.pop
-          end
+        def end_element_event?(event = @current)
+          event.is_a?(EndElementEvent)
+        end
 
-          unless @states.last == :end_element
+        def end_element_event
+          unless @states.last == :end_element_event
             syntax_error("Unexpected end of element, expected #{@states.last}")
           end
 
@@ -239,7 +239,6 @@ module RubyRDF
 
         def doc
           @states.push(:end_document)
-          #@states.push(:wses)
           rdf
         end
 
@@ -252,10 +251,11 @@ module RubyRDF
           if @current.uri != RDF::RDF || @current.attributes.any?
             syntax_error("Expected rdf:RDF element with no attributes")
           end
-          @states.push(:end_element)
 
           if node_element_list?(peek)
             @states.push(:node_element_list)
+          else
+            @states.push(:end_element_event)
           end
         end
 
@@ -277,13 +277,14 @@ module RubyRDF
         end
 
         def node_element_list
-          syntax_error("Expected nodeElementList") unless node_element_list?
-
           if ws?
             ws
-          else
-            @states.push(:wses)
+          elsif node_element?
             node_element
+          elsif end_element_event?
+            @states.pop
+          else
+            syntax_error("Expected nodeElementList, not #{@current.inspect}")
           end
         end
 
@@ -330,10 +331,13 @@ module RubyRDF
             end
           end
 
-          @states.push(:end_element)
-          @states.push(:property_elt_list)
+          if property_elt_list?(peek)
+            @states.push(:property_elt_list)
+          else
+            @states.push(:end_element_event)
+          end
 
-          @last_node = @current
+          @current
         end
 
         def property_attrs(attributes)
@@ -345,12 +349,14 @@ module RubyRDF
         end
 
         def property_elt_list
-          syntax_error("Expected propertyEltList") unless property_elt_list?
-
           if ws?
             ws
-          else
+          elsif property_elt?
             property_elt
+          elsif end_element_event?
+            @states.pop
+          else
+            syntax_error("Expected propertyEltList, not #{@current.inspect}")
           end
         end
 
@@ -365,7 +371,7 @@ module RubyRDF
         end
 
         def property_elt
-          syntax_error("Expected propertyElt") unless property_elt?
+          syntax_error("Expected propertyElt, not #{@current.inspect}") unless property_elt?
 
           if @current.uri == RDF::li
             @current.uri = Addressable::URI.parse("http://www.w3.org/1999/02/22-rdf-syntax-ns#_#{@current.parent.li_counter}")
@@ -384,14 +390,14 @@ module RubyRDF
             if @current.attributes.any?{|a| a.uri != RDF::ID}
               syntax_error("Only rdf:id is allowed as a property of resourcePropertyElt")
             end
-            @states.push(:end_element)
+            @states.push(:end_element_event)
             @states.push(:resource_property_elt)
           elsif empty_property_elt?
             empty_property_elt
           elsif literal_property_elt?
             literal_property_elt
           else
-            syntax_error("Expected propertyElt")
+            syntax_error("Expected propertyElt, not #{@current.inspect}")
           end
         end
 
@@ -455,7 +461,7 @@ module RubyRDF
 
           reify(s, @current)
 
-          @states.push(:end_element)
+          @states.push(:end_element_event)
         end
 
         def parse_type_literal_property_elt?(event = @current)
@@ -502,12 +508,13 @@ module RubyRDF
                                         n))
           reify(s, @current)
 
-          @states.push(:end_element)
-          unless peek.is_a?(EndElementEvent)
+          if property_elt_list?(peek, peek(2))
             elt = peek_element
             elt.parent = ElementEvent.new(@current, 'Description', "http://www.w3.org/1999/02/22-rdf-syntax-ns#", [])
             elt.parent.subject = n
             @states.push(:property_elt_list)
+          else
+            @states.push(:end_element_event)
           end
         end
 
@@ -522,45 +529,55 @@ module RubyRDF
             syntax_error("Only rdf:id and rdf:datatype are allowed as properties of parseTypeCollectionPropertyElt")
           end
 
-          if peek.is_a?(EndElementEvent)
-            @block.call(s = Statement.new(@current.parent.subject,
-                                          @current.uri,
-                                          RDF::nil))
-
-            reify(s, @current)
-          else
-            @states.push(:parse_type_collection_property_elt_first)
-            @states.push(:end_element)
-            @states.push(:wses)
-            @states.push(:node_element)
-            @states.push(:wses)
-          end
+          @last_event = @current
+          @states.push(:parse_type_collection_property_elt_first)
         end
 
         def parse_type_collection_property_elt_first
-          @states.pop
+          if ws?
+            ws
+          elsif node_element?
+            @last_node = Object.new
+            @states.pop
+            @states.push(:parse_type_collection_property_elt_next)
+            n = node_element
+            @block.call(s = Statement.new(@last_event.parent.subject,
+                                          @last_event.uri,
+                                          @last_node))
+            reify(s, @last_event)
 
-          n = Object.new
-          @block.call(s = Statement.new(@last_node.parent.parent.subject,
-                                        @last_node.parent.uri,
-                                        n))
-          reify(s, @last_node.parent)
-
-          @block.call(Statement.new(n, RDF::first, @last_node.uri))
-          @last_cons = n
-          @states.push(:parse_type_collection_property_elt_next)
-          @states.push(:end_element)
-          @states.push(:node_element_list)
+            @block.call(Statement.new(@last_node,
+                                      RDF::first,
+                                      @current.subject))
+            @last_event = @current
+          elsif end_element_event?
+            @block.call(s = Statement.new(@current.parent.parent.subject,
+                                          @current.parent.uri,
+                                          RDF::nil))
+            @states.pop
+            reify(s, @last_event)
+          else
+            syntax_error("Expected nodeElementList, not #{@current.inspect}")
+          end
         end
 
         def parse_type_collection_property_elt_next
-          o = Object.new
-          @block.call(Statement.new(o, RDF::first, @current.uri))
-          @block.call(Statement.new(@last_cons, RDF::rest, o))
-          @last_cons = o
-
-          if peek.is_a?(EndElementEvent)
-            @block.call(Statement.new(o, RDF::rest, RDF::nil))
+          if ws?
+            ws
+          elsif node_element?
+            @last_event = node_element
+            n = Object.new
+            @block.call(Statement.new(n,
+                                      RDF::first,
+                                      @last_event.subject))
+            @block.call(Statement.new(@last_node,
+                                      RDF::rest,
+                                      n))
+            @last_node = n
+          elsif end_element_event?
+            @block.call(Statement.new(@last_node,
+                                      RDF::rest,
+                                      RDF::nil))
             @states.pop
           end
         end
@@ -615,7 +632,7 @@ module RubyRDF
 
             reify(s, @current)
           end
-          @states.push(:end_element)
+          @states.push(:end_element_event)
         end
 
         def reify(statement, current)
