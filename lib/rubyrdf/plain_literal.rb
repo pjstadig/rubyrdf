@@ -7,7 +7,13 @@ module RubyRDF
     # Constructs a new PlainLiteral using +lexical_form+ and
     # +language_tag+.  +language_tag+ is normalized to lower case.
     def initialize(lexical_form, language_tag = nil)
-      @lexical_form = lexical_form.to_str.mb_chars.normalize(:c).to_str
+      @lexical_form = lexical_form.to_str
+      @lexical_form = if @lexical_form.respond_to?(:utf8nfc)
+                        @lexical_form.utf8nfc.to_str
+                      else
+                        @lexical_form.mb_chars.normalize(:c).to_str
+                      end
+
       @language_tag = language_tag && language_tag.to_s.downcase
     end
 

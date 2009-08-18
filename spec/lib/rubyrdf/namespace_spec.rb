@@ -9,8 +9,18 @@ describe RubyRDF::Namespace do
     @it.example.should == RubyRDF::URINode.new("http://example.org/example")
   end
 
+  it "should cache URIs generated using method_missing" do
+    node = @it.example
+    @it.example.should equal(node)
+  end
+
   it "should generate URIs using const_missing" do
     @it::Example.should == RubyRDF::URINode.new("http://example.org/Example")
+  end
+
+  it "should cache URIs generated using const_missing" do
+    node = @it::Example
+    @it::Example.should equal(node)
   end
 
   it "should be a blank slate" do

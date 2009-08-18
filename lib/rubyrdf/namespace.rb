@@ -7,11 +7,13 @@ module RubyRDF
         instance_methods.each {|m| undef_method(m) unless m =~ /^__/}
 
         def method_missing(sym, *a, &b)
-          RubyRDF::URINode.new("#{uri}\#{sym.to_s}")
+          @cache ||= {}
+          @cache[sym.to_s] ||= RubyRDF::URINode.new("#{uri}\#{sym.to_s}")
         end
 
         def const_missing(sym)
-          RubyRDF::URINode.new("#{uri}\#{sym.to_s}")
+          @cache ||= {}
+          @cache[sym.to_s] ||= RubyRDF::URINode.new("#{uri}\#{sym.to_s}")
         end
       end
       END

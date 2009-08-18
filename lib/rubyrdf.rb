@@ -1,6 +1,7 @@
 $KCODE = 'utf8'
 $:.unshift(File.expand_path(File.dirname(__FILE__))) unless $:.include?(File.expand_path(File.dirname(__FILE__)))
 
+require 'uri'
 require 'digest/md5'
 
 begin
@@ -9,6 +10,17 @@ rescue LoadError
   require 'rubygems'
   gem 'activesupport', '>=1.4.0'
   require 'activesupport'
+end
+
+begin
+  require 'utf8proc'
+rescue LoadError
+  require 'rubygems'
+  begin
+    gem 'utf8proc', '>=1.0.3'
+    require 'utf8proc'
+  rescue LoadError
+  end
 end
 
 begin

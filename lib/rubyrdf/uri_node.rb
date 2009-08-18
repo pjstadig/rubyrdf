@@ -3,8 +3,18 @@ module RubyRDF
     attr_reader :uri
 
     def initialize(uri)
-      uri = uri.to_str.mb_chars.normalize(:c).to_str
-      Addressable::URI.parse(uri)
+      uri = uri.to_str
+      uri = if uri.respond_to?(:utf8nfc)
+              uri.utf8nfc.to_str
+            else
+              uri.mb_chars.normalize(:c).to_str
+            end
+
+      begin
+        URI.parse(uri)
+      rescue URI::InvalidURIError
+        Addressable::URI.parse(uri)
+      end
       @uri = uri
     end
 

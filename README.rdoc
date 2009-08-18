@@ -41,6 +41,10 @@ A pure Ruby library for consuming and producing RDF data.
 * {addressable}[http://addressable.rubyforge.org/]
 * {activesupport}[http://rubyforge.org/projects/activesupport/]
 
+Optional:
+* {utf8proc}[http://utf8proc.rubyforge.org/] (if installed, speeds
+  up Unicode normalization)
+
 == INSTALL:
 
 To install the latest stable release:
