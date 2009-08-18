@@ -1,8 +1,6 @@
 * Reader/Writer
-- RDF/XML
 - Turtle
 * Graph implementations
-- SPARQL endpoint
 - URI graph
 - Federated graph
 * SPARQL query implementation
@@ -16,6 +14,6 @@
 * to_date
 * to_time
 * to_ruby
-* Why are the RDF/XML tests so slow?
 * New (streaming) HTTP library for Sesame graph
-* Update import/export signatures in Sesame
+* Performance improvements to NTriples parser
+* RDF/XML parse type literal parsing needs some help

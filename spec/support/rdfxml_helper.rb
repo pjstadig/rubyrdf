@@ -33,14 +33,15 @@ module RDFXMLHelper
     end
   end
 
-  def execute_w3c_parser_test(name)
+  def execute_parser_test(name, options = nil)
+    options ||= {}
     actual = RubyRDF::MemoryGraph.new
-    open_test_file("w3c/#{name}.rdf") do |f|
-      actual.import(f, :format => :rdfxml, :base_uri => "http://www.w3.org/2000/10/rdf-tests/rdfcore/#{name}.rdf")
+    open_test_file("#{name}.rdf") do |f|
+      actual.import(f, :format => :rdfxml, :base_uri => options[:base_uri])
     end
 
     query = RubyRDF::Query.new do |q|
-      ntriples_triples("w3c/#{name}.nt") do |s|
+      ntriples_triples("#{name}.nt") do |s|
         q.where(s)
       end
     end
@@ -50,6 +51,10 @@ module RDFXMLHelper
     else
       actual.should be_empty
     end
+  end
+
+  def execute_w3c_parser_test(name)
+    execute_parser_test("w3c/#{name}", :base_uri => "http://www.w3.org/2000/10/rdf-tests/rdfcore/#{name}.rdf")
   end
 
   def execute_w3c_error_test(name)

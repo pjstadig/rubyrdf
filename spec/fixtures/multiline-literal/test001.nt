@@ -1,0 +1,3 @@
+<http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-container-membership-superProperty/Manifest.rdf#test001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/10/rdf-tests/rdfcore/testSchema#NegativeEntailmentTest> .
+<http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-container-membership-superProperty/Manifest.rdf#test001> <http://www.w3.org/2000/10/rdf-tests/rdfcore/testSchema#description> "While it is a superproperty,\n\t\t_:a <rdfs:contains (@@member?)> _:b .\n     does NOT entail\n\t\t_:a <rdf:_n> _:b .\n\tfor any _n." .
+

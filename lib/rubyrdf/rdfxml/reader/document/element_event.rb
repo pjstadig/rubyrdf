@@ -11,9 +11,10 @@ module RubyRDF
                         :uri,
                         :li_counter,
                         :language,
-                        :subject)
+                        :subject,
+                        :ns)
 
-          def initialize(parent, local_name, namespace_name, attributes)
+          def initialize(parent, local_name, namespace_name, attributes, ns = [])
             @parent = parent
             @local_name = local_name.to_s
             @namespace_name = namespace_name.to_s
@@ -27,12 +28,7 @@ module RubyRDF
             end.first
 
             @base_uri = if base
-                          base = base.value.to_str
-                          if base[-1,1] != "/"
-                            base + "/"
-                          else
-                            base
-                          end
+                          Addressable::URI.parse(base.value.to_str)
                         else
                           parent.base_uri
                         end
@@ -51,20 +47,22 @@ module RubyRDF
                           parent.language
                         end
             @subject = nil
+            @ns = ns
           end
 
           def resolve(uri)
-            uri = uri.to_str
-            if base_uri && uri !~ /^[^:]+:\/\//
-              RubyRDF::URINode.new(base_uri + uri)
+            if uri.blank? && base_uri && base_uri.fragment
+              b = base_uri.dup
+              b.fragment = nil
+              RubyRDF::URINode.new(b.join(uri))
             else
-              RubyRDF::URINode.new(uri)
+              RubyRDF::URINode.new(base_uri ? base_uri.join(uri): uri)
             end
           end
 
           def has_attribute?(uri)
             a = attributes.select{|a| a.uri == uri}.first
-            a if a && a.string_value.present?
+            a if a
           end
 
           def name_start_char?(c)
@@ -108,6 +106,16 @@ module RubyRDF
                 id
               else
                 raise SyntaxError, "rdf:ID must match the XML Name production (as modified by XML namespaces)"
+              end
+            end
+          end
+
+          def rdf_node_id
+            if id = has_attribute?(RubyRDF::Namespace::RDF::nodeID)
+              if valid_name?(id.string_value)
+                id
+              else
+                raise SyntaxError, "rdf:nodeID must match the XML Name production (as modified by XML namespaces)"
               end
             end
           end

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<rdf:RDF
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+		xmlns:test="http://www.w3.org/2000/10/rdf-tests/rdfcore/testSchema#"
+>
+
+
+<!-- rdfs-container-membership-superProperty/Manifest.rdf -->
+<test:NegativeEntailmentTest rdf:about="http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-container-membership-superProperty/Manifest.rdf#test001">
+
+   <!-- <test:approval rdf:resource="http://lists.w3.org/Archives/Public/w3c-rdfcore-wg/2002Feb/0476.html" /> -->
+   <test:description>
+     While it is a superproperty,
+		_:a &lt;rdfs:contains (@@member?)&gt; _:b .
+     does NOT entail
+		_:a &lt;rdf:_n&gt; _:b .
+	for any _n.
+   </test:description>
+
+
+</test:NegativeEntailmentTest>
+
+
+</rdf:RDF>
+
