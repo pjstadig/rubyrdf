@@ -17,3 +17,4 @@
 * New (streaming) HTTP library for Sesame graph
 * Performance improvements to NTriples parser
 * RDF/XML parse type literal parsing needs some help
+* Mock out the HTTP requests in the Sesame specs
