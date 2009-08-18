@@ -142,7 +142,7 @@ module RubyRDF
 
     def node_to_ntriples(node)
       case node
-      when Addressable::URI, TypedLiteral, PlainLiteral
+      when URINode, TypedLiteral, PlainLiteral
         node.to_ntriples
       else
         "_:bn#{RubyRDF.generate_bnode_name}"
@@ -218,8 +218,8 @@ module RubyRDF
     end
 
     def transaction_xml_node(b, node, bnodes)
-      if node.is_a?(Addressable::URI)
-        b.uri(node.to_s)
+      if RubyRDF.uri?(node)
+        b.uri(node.uri)
       elsif RubyRDF.bnode?(node)
         b.bnode("_:" + (bnodes[node] ||= RubyRDF.generate_bnode_name))
       elsif node.is_a?(TypedLiteral)

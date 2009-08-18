@@ -8,7 +8,7 @@ module RubyRDF
       @datatype_uri = if datatype_uri.respond_to?(:to_uri)
                         datatype_uri.to_uri
                       else
-                        Addressable::URI.parse(datatype_uri.to_str)
+                        RubyRDF::URINode.new(datatype_uri.to_str)
                       end
     end
 

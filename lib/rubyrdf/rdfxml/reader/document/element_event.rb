@@ -19,19 +19,19 @@ module RubyRDF
             @namespace_name = namespace_name.to_s
 
             lang = attributes.select do |a|
-              "#{a.uri}/#{a.localname}" == XML::lang.to_s
+              "#{a.uri}/#{a.localname}" == XML::lang.uri
             end.first
 
             base = attributes.select do |a|
-              "#{a.uri}/#{a.localname}" == XML::base.to_s
+              "#{a.uri}/#{a.localname}" == XML::base.uri
             end.first
 
             @base_uri = if base
-                          b = Addressable::URI.parse(base.value.to_s)
-                          if !b.absolute? && parent.base_uri
-                            parent.base_uri.join(b)
+                          base = base.value.to_str
+                          if base[-1,1] != "/"
+                            base + "/"
                           else
-                            b
+                            base
                           end
                         else
                           parent.base_uri
@@ -43,7 +43,7 @@ module RubyRDF
             end.map{|a| AttributeEvent.new(self, a)}
 
             @li_counter = 1
-            @uri = Addressable::URI.parse(@namespace_name + @local_name)
+            @uri = RubyRDF::URINode.new(@namespace_name + @local_name)
 
             @language = if lang
                           lang.value.to_s
@@ -54,11 +54,11 @@ module RubyRDF
           end
 
           def resolve(uri)
-            uri = Addressable::URI.parse(uri) unless uri.is_a?(Addressable::URI)
-            if !uri.absolute? && base_uri
-              base_uri.join(uri)
+            uri = uri.to_str
+            if base_uri && uri !~ /^[^:]+:\/\//
+              RubyRDF::URINode.new(base_uri + uri)
             else
-              uri
+              RubyRDF::URINode.new(uri)
             end
           end
 

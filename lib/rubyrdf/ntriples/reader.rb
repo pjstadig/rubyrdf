@@ -164,7 +164,7 @@ module RubyRDF
 
       def uriRef
         consume('<')
-        node = Addressable::URI.parse(absoluteUri)
+        node = RubyRDF::URINode.new(absoluteUri)
         consume('>')
         node
       end

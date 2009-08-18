@@ -63,7 +63,7 @@ describe RubyRDF::NTriples::Reader do
 
   it "should decode unicode characters in URI" do
     reader = RubyRDF::NTriples::Reader.new(StringIO.new("<http://example.org/\\u20AC> <#{ex::property}> <#{ex::resource2}>.\n"))
-    reader.read.should == RubyRDF::Statement.new(Addressable::URI.parse("http://example.org/#{[0x20AC].pack("U")}"), ex::property, ex::resource2)
+    reader.read.should == RubyRDF::Statement.new(RubyRDF::URINode.new("http://example.org/#{[0x20AC].pack("U")}"), ex::property, ex::resource2)
   end
 
   it "should raise SyntaxError when missing space between nodes" do

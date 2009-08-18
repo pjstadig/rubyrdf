@@ -3,7 +3,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 describe RubyRDF::TypedLiteral do
   before do
     @lexical_form = "example"
-    @datatype_uri = Addressable::URI.parse("http://example.com/")
+    @datatype_uri = RubyRDF::URINode.new("http://example.com/")
     @it = RubyRDF::TypedLiteral.new(@lexical_form, @datatype_uri)
   end
 

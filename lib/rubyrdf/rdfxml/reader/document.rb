@@ -374,7 +374,7 @@ module RubyRDF
           syntax_error("Expected propertyElt, not #{@current.inspect}") unless property_elt?
 
           if @current.uri == RDF::li
-            @current.uri = Addressable::URI.parse("http://www.w3.org/1999/02/22-rdf-syntax-ns#_#{@current.parent.li_counter}")
+            @current.uri = RubyRDF::URINode.new("http://www.w3.org/1999/02/22-rdf-syntax-ns#_#{@current.parent.li_counter}")
             @current.parent.li_counter += 1
           end
 
@@ -442,7 +442,7 @@ module RubyRDF
           datatype = @current.has_attribute?(RDF::datatype)
           datatype = datatype && datatype.string_value
           begin
-            datatype = datatype && Addressable::URI.parse(datatype)
+            datatype = datatype && RubyRDF::URINode.new(datatype)
           rescue
             raise SyntaxError, "Literal Datatype is not a valid URI #{datatype}"
           end
@@ -618,7 +618,7 @@ module RubyRDF
               if a.uri == RDF::type
                 @block.call(Statement.new(node,
                                           RDF::type,
-                                          Addressable::URI.parse(a.string_value)))
+                                          RubyRDF::URINode.new(a.string_value)))
               else
                 @block.call(Statement.new(node,
                                           a.uri,

@@ -76,7 +76,7 @@ module RubyRDF
 
   # Returns true if +node+ is an URI, false otherwise.
   def self.uri?(node)
-    node.is_a?(Addressable::URI)
+    node.is_a?(URINode)
   end
 
   # Returns true if +node+ is a literal (plain or typed), false otherwise.

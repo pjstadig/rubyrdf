@@ -18,7 +18,7 @@ module RubyRDF
 
       def export_node(node)
         case node
-        when Addressable::URI, PlainLiteral, TypedLiteral
+        when URINode, PlainLiteral, TypedLiteral
           node.to_ntriples
         else
           "_:bn#{@bnodes[node] ||= RubyRDF.generate_bnode_name}"

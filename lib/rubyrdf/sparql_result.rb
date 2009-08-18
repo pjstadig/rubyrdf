@@ -29,7 +29,7 @@ module RubyRDF
     def parse_node(node, bnodes)
       case node.name
       when 'uri'
-        Addressable::URI.parse(node.text)
+        RubyRDF::URINode.new(node.text)
       when 'bnode'
         bnodes[node.text] ||= Object.new
       when 'literal'

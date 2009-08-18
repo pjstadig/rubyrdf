@@ -79,8 +79,8 @@ describe RubyRDF::Sesame do
 
   it "should delete statement with URI that includes query" do
     s = RubyRDF::Statement.new(Addressable::URI.parse("http://example.org/q?abc=1&def=2"),
-                      ex::pred,
-                      ex::obj)
+                               ex::pred,
+                               ex::obj)
     @graph.add(s)
     @graph.should_not be_empty
     @graph.delete(s)
