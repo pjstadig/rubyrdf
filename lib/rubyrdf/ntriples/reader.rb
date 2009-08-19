@@ -7,8 +7,8 @@ module RubyRDF
         @io = io
         @lineno = 1
         @charno = 1
-        stretch_buf_to(1)
         @bnodes = {}
+        @uri_cache = {}
       end
 
       def each
@@ -62,38 +62,39 @@ module RubyRDF
       end
 
       # All of the internal parsing methods follow
-      def stretch_buf_to(x)
-        @buf ||= ''
-        goal = x - @buf.length
-        while goal > 0 && !@io.eof?
-          @buf << @io.getc.chr
-          goal -= 1
-          @charno += 1
+      def getc
+        if @c
+          c = @c
+          @c = nil
+          c
+        else
+          @io.getc
         end
       end
 
       def consume(str = nil)
-        if str.nil?
-          stretch_buf_to(2)
-          @buf.slice!(0).chr
-        elsif test(str)
-          stretch_buf_to(str.length + 1)
+        c = getc
+        if !str.nil? && str != c
+          raise SyntaxError, "Expected #{str.chr} at #{position}"
+        end
+        c
+      end
 
-          if @buf.length >= str.length
-            @buf.slice!(0, str.length)
-          end
+      def consume_until(sep)
+        c = getc
+        if c != sep
+          c.chr + @io.readline(sep.chr)
         else
-          raise SyntaxError, "Expected #{str} at #{position}"
+          c.chr
         end
       end
 
       def test(str)
-        stretch_buf_to(str.length)
-        @buf[0, str.length] == str
+        peek == str
       end
 
       def peek
-        @buf[0, 1]
+        @c ||= @io.getc
       end
 
       ## Parsing Methods
@@ -114,7 +115,7 @@ module RubyRDF
       end
 
       def comment
-        str = consume('#')
+        str = consume(?#)
         while character_no_cr_or_lf?
           str = consume
         end
@@ -130,7 +131,7 @@ module RubyRDF
         if ws?
           wses
         end
-        consume('.')
+        consume(?.)
         if ws?
           wses
         end
@@ -163,38 +164,34 @@ module RubyRDF
       end
 
       def uriRef
-        consume('<')
-        node = RubyRDF::URINode.new(absoluteUri)
-        consume('>')
-        node
+        consume(?<)
+        uri = absoluteUri
+        @uri_cache[uri] ||= RubyRDF::URINode.new(uri)
       end
 
       def absoluteUri
-        str = character
-        while character? && !test('>')
-          str << character
-        end
-
-        NTriples.unescape_unicode(str)
+        NTriples.unescape_unicode(character.chr +
+                                  consume_until(?>).chomp(">"))
       end
 
       def nodeId
-        consume('_:')
+        consume(?_)
+        consume(?:)
         @bnodes[name] ||= Object.new
       end
 
       def name
-        str = ''
+        str = StringIO.new
         if cap_az? || az?
-          str << consume
+          str.putc(consume)
         else
           raise SyntaxError, "Expected A-Z or a-z at #{position}"
         end
 
         while cap_az? || az? || num?
-          str << consume
+          str.putc(consume)
         end
-        str
+        str.string
       end
 
       def literal
@@ -213,59 +210,56 @@ module RubyRDF
       end
 
       def lit_string
-        consume('"')
-        str = string
-        consume('"')
-        str
+        consume(?")
+        string
       end
 
       def string
-        str = ''
-        while character? && !test('"')
-          char = character
-          str << char
-          if char == '\\' && (test('\\') || test('"'))
-            str << consume
-          end
-        end
+        str = StringIO.new
+        begin
+          buf = consume_until(?")
+          str.write(buf)
+          b = buf.match(/(\\*)"$/)[1]
+        end while b.size.odd?
 
-        NTriples.unescape(str)
+        NTriples.unescape(str.string.chomp('"'))
       end
 
       def lang
-        consume('@')
+        consume(?@)
         language
       end
 
       def language
-        str = ''
+        str = StringIO.new
         if az?
-          str << consume
+          str.putc(consume)
         else
           raise SyntaxError, "Expected a-z at #{position}"
         end
 
-        while az? && !test('-')
-          str << consume
+        while az? && !test(?-)
+          str.putc(consume)
         end
 
-        while test('-')
-          str << consume
+        while test(?-)
+          str.putc(consume)
           if az? || num?
-            str << consume
+            str.putc(consume)
           else
             raise SyntaxError, "Expected a-z or number at #{position}"
           end
 
           while az? || num?
-            str << consume
+            str.putc(consume)
           end
         end
-        str
+        str.string
       end
 
       def datatype
-        consume('^^')
+        consume(?^)
+        consume(?^)
         uriRef
       end
 
@@ -278,20 +272,20 @@ module RubyRDF
       end
 
       def eoln
-        str = ''
+        str = StringIO.new
         if cr?
-          str = consume
+          str.putc(consume)
           if lf?
-            str << consume
+            str.putc(consume)
           end
         elsif lf?
-          str = consume
+          str.putc(consume)
         elsif !@io.eof?
           raise SyntaxError, "Expected cr, lf, or crlf at #{position}"
         end
         @lineno += 1
         @charno = 1
-        str
+        str.string
       end
 
       ## Test Methods
@@ -300,7 +294,7 @@ module RubyRDF
       end
 
       def comment?
-        test('#')
+        test(?#)
       end
 
       def triple?
@@ -320,27 +314,27 @@ module RubyRDF
       end
 
       def uriRef?
-        test('<')
+        test(?<)
       end
 
       def nodeId?
-        test("_:")
+        test(?_)
       end
 
       def lit_string?
-        test('"')
+        test(?")
       end
 
       def lang?
-        test("@")
+        test(?@)
       end
 
       def datatype?
-        test("^^")
+        test(?^)
       end
 
       def language_tag?
-        ('a'..'z').include?(peek)
+        (?a..?z).include?(peek)
       end
 
       def ws?
@@ -352,19 +346,19 @@ module RubyRDF
       end
 
       def space?
-        peek == 0x20.chr
+        peek == 0x20
       end
 
       def cr?
-        peek == 0xD.chr
+        peek == 0xD
       end
 
       def lf?
-        peek == 0xA.chr
+        peek == 0xA
       end
 
       def tab?
-        peek == 0x9.chr
+        peek == 0x9
       end
 
       def string?
@@ -372,15 +366,15 @@ module RubyRDF
       end
 
       def cap_az?
-        ('A'..'Z').include?(peek)
+        (?A..?Z).include?(peek)
       end
 
       def az?
-        ('a'..'z').include?(peek)
+        (?a..?z).include?(peek)
       end
 
       def num?
-        ('0'..'9').include?(peek)
+        (?0..?9).include?(peek)
       end
 
       def name?
@@ -396,7 +390,7 @@ module RubyRDF
       end
 
       def character?
-        (0x20.chr..0x7E.chr).include?(peek)
+        (0x20..0x7E).include?(peek)
       end
     end
   end

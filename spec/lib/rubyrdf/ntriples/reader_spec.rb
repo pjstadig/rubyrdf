@@ -24,7 +24,7 @@ describe RubyRDF::NTriples::Reader do
   end
 
   it "should read NTriples test file" do
-    File.open(File.dirname(__FILE__) + "/test.nt") do |f|
+    File.open(File.dirname(__FILE__) + "/../../../fixtures/test.nt") do |f|
       reader = RubyRDF::NTriples::Reader.new(f)
       reader.eof?.should be_false
       compare(reader.read, RubyRDF::Statement.new(ex::resource1, ex::property, ex::resource2))
