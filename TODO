@@ -3,6 +3,7 @@
 * Graph implementations
 - URI graph
 - Federated graph
+- ActiveRecord based graph
 * SPARQL query implementation
 * Move the Ruby query execution into the Query class
 * Reasoner and rules
@@ -17,3 +18,4 @@
 * New (streaming) HTTP library for Sesame graph
 * RDF/XML parse type literal parsing needs some help
 * Mock out the HTTP requests in the Sesame specs
+* Ruby 1.9 support
