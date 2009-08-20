@@ -4,6 +4,7 @@ module RubyRDF
   # TODO specs
   # TODO name?
   # TODO split out HttpGraph
+  # TODO match
   class SparqlEndpoint < Graph
     attr_reader :endpoint_uri
     attr_reader :default_graph_uri

@@ -19,3 +19,4 @@
 * RDF/XML parse type literal parsing needs some help
 * Mock out the HTTP requests in the Sesame specs
 * Ruby 1.9 support
+* Reification

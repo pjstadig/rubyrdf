@@ -3,7 +3,7 @@
 * 1 major enhancement:
   * Added transaction support for sesame
 
-== 0.0.1 2008-07-11
+== 0.0.1 2008-12-11
 
 * 1 major enhancement:
   * Initial release
