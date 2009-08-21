@@ -2,6 +2,13 @@ require 'net/http'
 
 module RubyRDF
   class Sesame < Graph
+    class UnknownRepositoryError < Error
+      attr_accessor :uri, :repository
+      def initialize(uri, repository)
+        @uri, @repository = uri, repository
+      end
+    end
+
     attr_reader :host, :port, :path, :repository
 
     def initialize(uri, repository) #:nodoc:
@@ -11,10 +18,14 @@ module RubyRDF
       @path = uri.path
       @repository = repository
       @transactions = []
+
+      unless metadata && metadata['readable'].lexical_form == 'true'
+        raise UnknownRepositoryError.new(uri, repository)
+      end
     end
 
     def writable? #:nodoc:
-      true
+      metadata["writable"].lexical_form == "true"
     end
 
     def size #:nodoc:
@@ -27,6 +38,32 @@ module RubyRDF
 
     def empty? #:nodoc:
       size == 0
+    end
+
+    def metadata
+      @metadata = RubyRDF::SparqlResult.new(
+                            get_request("#{@path}/repositories",
+                                        {},
+                                        "Accept" => "application/sparql-results+xml").read).each do |res|
+        return res if res["id"].lexical_form == @repository
+      end || {}
+    end
+
+    def match(*triple)
+      s, p, o = triple.to_triple.map{|n| n || Object.new}
+
+      q = ["select {"]
+      q << RubyRDF.bnode?(s) ? "?s" : ""
+      q << RubyRDF.bnode?(p) ? "?p" : ""
+      q << RubyRDF.bnode?(o) ? "?o" : ""
+      q << "} where {"
+      q << RubyRDF.bnode?(s) ? "?s" : s.to_ntriples
+      q << RubyRDF.bnode?(p) ? "?p" : p.to_ntriples
+      q << RubyRDF.bnode?(o) ? "?o" : o.to_ntriples
+      q << [".}"]
+
+      result = query(q.join(" "))
+      result.inject(MemoryGraph.new){|g, b| g.add(b[s], b[p], b[o])} if result
     end
 
     def each(&b) #:nodoc:

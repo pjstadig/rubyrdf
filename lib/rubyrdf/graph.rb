@@ -4,6 +4,9 @@ module RubyRDF
   # interface is implemented as specified here.
   #--
   # TODO transaction support
+  # TODO implement include? in terms of match?
+  # TODO ==?
+  # TODO remove Enumerable? and add to_a, to_set, etc.
   class Graph
     include Enumerable
 

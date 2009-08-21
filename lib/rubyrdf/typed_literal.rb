@@ -1,4 +1,6 @@
 module RubyRDF
+  #--
+  # TODO to_ruby? or should that happen automatically from graph?
   class TypedLiteral
     attr_reader :lexical_form
     attr_reader :datatype_uri

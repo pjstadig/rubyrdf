@@ -20,3 +20,4 @@
 * Mock out the HTTP requests in the Sesame specs
 * Ruby 1.9 support
 * Reification
+* Do I need to include a call to super in subclasses of Graph?

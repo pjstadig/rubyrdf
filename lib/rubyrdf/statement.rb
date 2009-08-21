@@ -2,6 +2,7 @@ module RubyRDF
   #--
   # TODO nodoc
   # TODO move InvalidStatement to here?
+  # TODO conversion methods to/from hash?
   class Statement
     attr_reader :subject
     attr_reader :predicate

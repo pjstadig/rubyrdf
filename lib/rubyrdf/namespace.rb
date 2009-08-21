@@ -1,4 +1,9 @@
 module RubyRDF
+  #--
+  # TODO [] method
+  # TODO method to find a namespace base on an URI?
+  # TODO keep track of namespaces and their URIs
+  # TODO should implement respond_to?
   class Namespace
     def self.new(uri)
       m = Module.new
