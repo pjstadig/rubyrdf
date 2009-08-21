@@ -43,6 +43,87 @@ module RubyRDF
     end
     alias_method :to_s, :to_ntriples
     alias_method :inspect, :to_ntriples
+
+    def to_b
+      if datatype_uri == RubyRDF::Namespace::XSD::boolean
+        if lexical_form == "true"
+          true
+        elsif lexical_form == "false"
+          false
+        end
+      end
+    end
+
+    def to_int
+      if datatype_uri == RubyRDF::Namespace::XSD::integer
+        lexical_form.to_i
+      else
+        raise NoMethodError, "undefined method `to_int' for #{inspect}:#{self.class}"
+      end
+    end
+
+    def to_i
+      if datatype_uri == RubyRDF::Namespace::XSD::integer
+        lexical_form.to_i
+      else
+        0
+      end
+    end
+
+    def to_f
+      if datatype_uri == RubyRDF::Namespace::XSD::float
+        lexical_form.to_f
+      else
+        0.0
+      end
+    end
+
+    def to_str
+      if datatype_uri == RubyRDF::Namespace::XSD::string
+        lexical_form.to_s
+      else
+        raise NoMethodError, "undefined method `to_str' for #{inspect}:#{self.class}"
+      end
+    end
+
+    def to_s
+      if datatype_uri == RubyRDF::Namespace::XSD::string
+        lexical_form.dup
+      else
+        ''
+      end
+    end
+
+    def to_time
+      if datatype_uri == RubyRDF::Namespace::XSD::dateTime
+        Time.xmlschema(lexical_form)
+      end
+    rescue ArgumentError
+    end
+
+    def to_datetime
+      if datatype_uri == RubyRDF::Namespace::XSD::dateTime
+        DateTime.strptime(lexical_form)
+      end
+    rescue ArgumentError
+    end
+
+    def to_date
+      if datatype_uri == RubyRDF::Namespace::XSD::date
+        Date.strptime(lexical_form)
+      end
+    rescue ArgumentError
+    end
+
+    def respond_to?(sym, include_private = false)
+      if sym.to_sym == :to_int
+        datatype_uri == RubyRDF::Namespace::XSD::integer
+      elsif sym.to_sym == :to_str
+        datatype_uri == RubyRDF::Namespace::XSD::string
+      else
+        super
+      end
+    end
   end
 end
 

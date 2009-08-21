@@ -95,60 +95,207 @@ describe RubyRDF::TypedLiteral do
   it "should alias #to_ntriples as #inspect" do
     @it.class.instance_method(:inspect).should == @it.class.instance_method(:to_ntriples)
   end
-
-  it "should alias #to_ntriples as #to_s" do
-    @it.class.instance_method(:to_s).should == @it.class.instance_method(:to_ntriples)
-  end
 end
 
-describe "Integer#to_literal" do
-  it "should convert to TypedLiteral" do
-    2.to_literal.should == RubyRDF::TypedLiteral.new("2", RubyRDF::Namespace::XSD::integer)
-  end
-end
+describe "TypedLiteral conversions" do
+  XSD = RubyRDF::Namespace::XSD
 
-describe "Float#to_literal" do
-  it "should convert to TypedLiteral" do
-    1.5.to_literal.should == RubyRDF::TypedLiteral.new("1.5", RubyRDF::Namespace::XSD::double)
+  describe "Integer#to_literal" do
+    it "should convert to TypedLiteral" do
+      2.to_literal.should == RubyRDF::TypedLiteral.new("2", XSD::integer)
+    end
   end
-end
 
-describe "String#to_literal" do
-  it "should convert to TypedLiteral" do
-    "test".to_literal.should == RubyRDF::TypedLiteral.new("test", RubyRDF::Namespace::XSD::string)
+  describe "Float#to_literal" do
+    it "should convert to TypedLiteral" do
+      1.5.to_literal.should == RubyRDF::TypedLiteral.new("1.5", XSD::double)
+    end
   end
-end
 
-describe "TrueClass#to_literal" do
-  it "should convert to TypedLiteral" do
-    true.to_literal.should == RubyRDF::TypedLiteral.new("true", RubyRDF::Namespace::XSD::boolean)
+  describe "String#to_literal" do
+    it "should convert to TypedLiteral" do
+      "test".to_literal.should == RubyRDF::TypedLiteral.new("test", XSD::string)
+    end
   end
-end
 
-describe "FalseClass#to_literal" do
-  it "should convert to TypedLiteral" do
-    false.to_literal.should == RubyRDF::TypedLiteral.new("false", RubyRDF::Namespace::XSD::boolean)
+  describe "TrueClass#to_literal" do
+    it "should convert to TypedLiteral" do
+      true.to_literal.should == RubyRDF::TypedLiteral.new("true", XSD::boolean)
+    end
   end
-end
 
-describe "Time#to_literal" do
-  it "should convert to TypedLiteral" do
-    it = Time.now
-    it.to_literal.should ==
-      RubyRDF::TypedLiteral.new(it.xmlschema, RubyRDF::Namespace::XSD::dateTime)
+  describe "FalseClass#to_literal" do
+    it "should convert to TypedLiteral" do
+      false.to_literal.should == RubyRDF::TypedLiteral.new("false", XSD::boolean)
+    end
   end
-end
 
-describe "DateTime#to_literal" do
-  it "should convert to TypedLiteral" do
-    it = DateTime.new(2008, 12, 23, 0, 0, 0, -(5.0/24)).to_literal.should ==
-      RubyRDF::TypedLiteral.new("2008-12-23T00:00:00-05:00", RubyRDF::Namespace::XSD::dateTime)
+  describe "Time#to_literal" do
+    it "should convert to TypedLiteral" do
+      it = Time.now
+      it.to_literal.should ==
+        RubyRDF::TypedLiteral.new(it.xmlschema, XSD::dateTime)
+    end
   end
-end
 
-describe "Date#to_literal" do
-  it "should convert to TypedLiteral" do
-    Date.civil(2008, 12, 23).to_literal.should ==
-      RubyRDF::TypedLiteral.new("2008-12-23", RubyRDF::Namespace::XSD::date)
+  describe "DateTime#to_literal" do
+    it "should convert to TypedLiteral" do
+      it = DateTime.new(2008, 12, 23, 0, 0, 0, -(5.0/24)).to_literal.should ==
+        RubyRDF::TypedLiteral.new("2008-12-23T00:00:00-05:00", XSD::dateTime)
+    end
+  end
+
+  describe "Date#to_literal" do
+    it "should convert to TypedLiteral" do
+      Date.civil(2008, 12, 23).to_literal.should ==
+        RubyRDF::TypedLiteral.new("2008-12-23", XSD::date)
+    end
+  end
+
+  describe "to_int" do
+    it "should be 1 for '1'^^<xsd:integer>" do
+      RubyRDF::TypedLiteral.new("1", XSD::integer).to_int.should == 1
+    end
+
+    it "should be 0 invalid integer" do
+      RubyRDF::TypedLiteral.new("x", XSD::integer).to_int.should == 0
+    end
+
+    it "should raise NoMethodError for non-integer" do
+      lambda {
+        RubyRDF::TypedLiteral.new("1", XSD::string).to_int
+      }.should raise_error(NoMethodError)
+    end
+  end
+
+  describe "to_i" do
+    it "should be 1 for '1'^^<xsd:integer>" do
+      RubyRDF::TypedLiteral.new("1", XSD::integer).to_i.should == 1
+    end
+
+    it "should be 0 invalid integer" do
+      RubyRDF::TypedLiteral.new("x", XSD::integer).to_i.should == 0
+    end
+
+    it "should be 0 non-integer" do
+      RubyRDF::TypedLiteral.new("1", XSD::string).to_i.should == 0
+    end
+  end
+
+  describe "to_f" do
+    it "should be 1.1 for '1.1'^^<xsd:float>" do
+      RubyRDF::TypedLiteral.new("1.1", XSD::float).to_f.should == 1.1
+    end
+
+    it "should be 0.0 invalid float" do
+      RubyRDF::TypedLiteral.new("x", XSD::float).to_f.should == 0.0
+    end
+
+    it "should be 0.0 non-float" do
+      RubyRDF::TypedLiteral.new("1.1", XSD::string).to_f.should == 0.0
+    end
+  end
+
+  describe "to_str" do
+    it "should be 'test' for 'test'^^<xsd:string>" do
+      RubyRDF::TypedLiteral.new("test", XSD::string).to_str.should == "test"
+    end
+
+    it "should raise NoMethodError non-string" do
+      lambda {
+        RubyRDF::TypedLiteral.new("x", XSD::float).to_str
+      }.should raise_error(NoMethodError)
+    end
+  end
+
+  describe "to_s" do
+    it "should be 'test' for 'test'^^<xsd:string>" do
+      RubyRDF::TypedLiteral.new("test", XSD::string).to_s.should == "test"
+    end
+
+    it "should be '' non-string" do
+      RubyRDF::TypedLiteral.new("test", XSD::float).to_s.should == ""
+    end
+  end
+
+  describe "to_b" do
+    it "should be true for 'true'^^<xsd:boolean>" do
+      RubyRDF::TypedLiteral.new("true", XSD::boolean).to_b.should be_true
+    end
+
+    it "should be false for 'false'^^<xsd:boolean>" do
+      RubyRDF::TypedLiteral.new("false", XSD::boolean).to_b.should be_false
+    end
+
+    it "should be nil invalid boolean" do
+      RubyRDF::TypedLiteral.new("x", XSD::boolean).to_b.should be_nil
+    end
+
+    it "should be nil non-boolean" do
+      RubyRDF::TypedLiteral.new("true", XSD::string).to_b.should be_nil
+    end
+  end
+
+  describe "to_time" do
+    it "should be 2008-12-23T10:20:30-05:00 for '2008-12-23T10:20:30-05:00'^^<xsd:dateTime>" do
+      RubyRDF::TypedLiteral.new("2008-12-23T10:20:30-05:00", XSD::dateTime).to_time.should ==
+        Time.utc(2008, 12, 23, 15, 20, 30)
+    end
+
+    it "should be nil invalid dateTime" do
+      RubyRDF::TypedLiteral.new("x", XSD::dateTime).to_time.should be_nil
+    end
+
+    it "should be nil non-dateTime" do
+      RubyRDF::TypedLiteral.new("2008-12-23T10:20:30-05:00", XSD::string).to_time.should be_nil
+    end
+  end
+
+  describe "to_datetime" do
+    it "should be 2008-12-23T10:20:30-05:00 for 'true'^^<xsd:dateTime>" do
+      RubyRDF::TypedLiteral.new("2008-12-23T10:20:30-05:00", XSD::dateTime).to_datetime.should ==
+        DateTime.civil(2008, 12, 23, 15, 20, 30)
+    end
+
+    it "should be nil invalid dateTime" do
+      RubyRDF::TypedLiteral.new("x", XSD::dateTime).to_datetime.should be_nil
+    end
+
+    it "should be nil non-dateTime" do
+      RubyRDF::TypedLiteral.new("2008-12-23T10:20:30-05:00", XSD::string).to_datetime.should be_nil
+    end
+  end
+
+  describe "to_date" do
+    it "should be 2008-12-23 for '2008-12-23'^^<xsd:date>" do
+      RubyRDF::TypedLiteral.new("2008-12-23", XSD::date).to_date.should ==
+        Date.civil(2008, 12, 23)
+    end
+
+    it "should be nil invalid date" do
+      RubyRDF::TypedLiteral.new("x", XSD::date).to_date.should be_nil
+    end
+
+    it "should be nil non-date" do
+      RubyRDF::TypedLiteral.new("2008-12-23", XSD::string).to_date.should be_nil
+    end
+  end
+
+  describe "respond_to?" do
+    it "should be true for :to_int if integer" do
+      RubyRDF::TypedLiteral.new("1", XSD::integer).respond_to?(:to_int).should be_true
+    end
+
+    it "should be false for :to_int if non-integer" do
+      RubyRDF::TypedLiteral.new("1", XSD::date).respond_to?(:to_int).should be_false
+    end
+
+    it "should be true for :to_str if string" do
+      RubyRDF::TypedLiteral.new("test", XSD::string).respond_to?(:to_str).should be_true
+    end
+
+    it "should be false for :to_str if non-string" do
+      RubyRDF::TypedLiteral.new("test", XSD::date).respond_to?(:to_str).should be_false
+    end
   end
 end
