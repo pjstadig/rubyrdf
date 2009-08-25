@@ -36,6 +36,10 @@ if defined?(ActiveRecord)
       def include?(*statement)
         @graph.statements.find_by_rdf(statement.to_statement, @bnodes)
       end
+
+      def size
+        @graph.statements.size
+      end
     end
   end
 end
