@@ -64,15 +64,15 @@ module RubyRDF
         sub, pred, obj = fragment.to_triple.map{|x| x || Object.new}
         each do |s|
           bindings = {}
-          if RubyRDF.bnode?(sub)
+          if RubyRDF.bnode?(sub) && !known?(sub)
             bindings[sub] = s.subject
           end
 
-          if RubyRDF.bnode?(pred) && !bindings[pred]
+          if RubyRDF.bnode?(pred) && !known?(pred) && !bindings[pred]
             bindings[pred] = s.predicate
           end
 
-          if RubyRDF.bnode?(obj) && !bindings[obj]
+          if RubyRDF.bnode?(obj) && !known?(obj) && !bindings[obj]
             bindings[obj] = s.object
           end
 

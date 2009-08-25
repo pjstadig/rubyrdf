@@ -5,6 +5,14 @@ require 'uri'
 require 'digest/md5'
 
 begin
+  require 'activerecord'
+rescue LoadError
+  require 'rubygems'
+  gem 'activerecord'
+  require 'activerecord'
+end
+
+begin
   require 'activesupport'
 rescue LoadError
   require 'rubygems'

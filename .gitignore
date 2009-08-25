@@ -1,5 +1,6 @@
 \#*
 *~
+*.db
 .loadpath
 .project
 announcement.txt
