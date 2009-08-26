@@ -49,7 +49,7 @@ if defined?(ActiveRecord)
       def writable?; true end
 
       def each
-        @graph.statements.each{|s| yield s.to_rdf(@bnodes)}
+        @graph.statements.each{|s| yield to_rdf(s)}
       end
 
       def match(*triple)

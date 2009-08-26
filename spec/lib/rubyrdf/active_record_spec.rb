@@ -219,4 +219,19 @@ describe RubyRDF::ActiveRecord do
       g.size.should == 0
     end
   end
+
+  describe "each" do
+    before do
+      @statements = [RubyRDF::Statement.new(ex::a, ex::b, ex::c),
+                     RubyRDF::Statement.new(ex::a, ex::b, ex::d)
+                    ]
+      @it.add_all(*@statements)
+    end
+
+    it "should iterate each statement" do
+      expected = @statements.dup
+      @it.each{|s| expected.delete(s)}
+      expected.should be_empty
+    end
+  end
 end
