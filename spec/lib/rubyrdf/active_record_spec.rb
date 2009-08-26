@@ -6,6 +6,8 @@ require File.expand_path(File.join(File.dirname(__FILE__), %w[.. .. spec_helper]
 #   at.add_exception("graph.db")
 # end
 describe RubyRDF::ActiveRecord do
+  include ActiveRecordHelper
+
   def ex
     @ex ||= RubyRDF::Namespace.new("http://example.com/")
   end
@@ -15,110 +17,206 @@ describe RubyRDF::ActiveRecord do
   end
 
   before(:all) do
-    File.delete("graph.db") if File.exists?("graph.db")
-
-    ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => "graph.db")
-    conn = ActiveRecord::Base.connection
-    conn.create_table(:graphs){}
-
-    conn.create_table(:statements) do |t|
-      t.integer :subject_id, :predicate_id, :object_id
-      t.string :subject_type, :predicate_type, :object_type
-    end
-
-    conn.create_table(:graphs_statements, :id => false) do |t|
-      t.integer :graph_id, :statement_id
-    end
-
-    conn.create_table(:uri_nodes) do |t|
-      t.string :uri
-    end
-
-    conn.create_table(:plain_literals) do |t|
-      t.string :lexical_form, :language_tag
-    end
-
-    conn.create_table(:typed_literals) do |t|
-      t.string :lexical_form, :datatype_uri
-    end
-
-    conn.create_table(:b_nodes){}
+    setup_db
   end
 
   before do
-    RubyRDF::ActiveRecord::Graph.destroy_all
-    RubyRDF::ActiveRecord::URINode.destroy_all
-    RubyRDF::ActiveRecord::PlainLiteral.destroy_all
-    RubyRDF::ActiveRecord::TypedLiteral.destroy_all
-    RubyRDF::ActiveRecord::BNode.destroy_all
+    reset_db
     @it = RubyRDF::ActiveRecord.new
   end
 
   describe "add" do
-    it "should create AR objects" do
+    it "should create Statement" do
       @it.add(:a, ex::pred, 2.to_literal)
-      @it.add(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      RubyRDF::ActiveRecord::Statement.count.should == 1
+      @it.include?(:a, ex::pred, 2.to_literal).should be_true
+    end
 
-      RubyRDF::ActiveRecord::BNode.count.should == 1
-      @bnode = RubyRDF::ActiveRecord::BNode.find(:first)
-      @bnode.should_not be_nil
+    it "should only create a Statement once" do
+      @it.add(ex::sub, ex::pred, 2.to_literal)
+      another = RubyRDF::ActiveRecord.new
+      another.add(ex::sub, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::Statement.count.should == 1
+    end
 
+    it "should only add a Statement once" do
+      @it.add(:a, ex::pred, 2.to_literal)
+      @it.add(:a, ex::pred, 2.to_literal)
+      @it.size.should == 1
+      RubyRDF::ActiveRecord::Statement.count.should == 1
+      @it.include?(:a, ex::pred, 2.to_literal).should be_true
+    end
+
+    it "should create URINode" do
+      @it.add(:a, ex::pred, 2.to_literal)
       RubyRDF::ActiveRecord::URINode.count.should == 1
-      @uri = RubyRDF::ActiveRecord::URINode.find_by_uri(ex::pred.uri)
-      @uri.should_not be_nil
+      RubyRDF::ActiveRecord::URINode.find_by_uri(ex::pred.uri).should_not be_nil
+    end
 
-      RubyRDF::ActiveRecord::TypedLiteral.count.should == 1
-      @typed_literal = RubyRDF::ActiveRecord::TypedLiteral.find_by_lexical_form_and_datatype_uri(2.to_literal.lexical_form,
-                                                                                                 2.to_literal.datatype_uri.uri)
-      @typed_literal.should_not be_nil
-
+    it "should create PlainLiteral" do
+      @it.add(:a, ex::pred, RubyRDF::PlainLiteral.new("test"))
       RubyRDF::ActiveRecord::PlainLiteral.count.should == 1
-      @plain_literal = RubyRDF::ActiveRecord::PlainLiteral.find_by_lexical_form_and_language_tag("test",
-                                                                                                 "en")
-      @plain_literal.should_not be_nil
+      RubyRDF::ActiveRecord::PlainLiteral.find(:first,
+                                               :conditions => {
+                                                 :lexical_form => "test",
+                                                 :language_tag => nil
+                                               }).should_not be_nil
+    end
 
-      RubyRDF::ActiveRecord::Statement.count.should == 2
-      RubyRDF::ActiveRecord::Statement.
-        find(:first,
-             :conditions => ['subject_id = ? and '+
-                             'subject_type = ? and ' +
-                             'predicate_id = ? and ' +
-                             'predicate_type = ? and ' +
-                             'object_id = ? and ' +
-                             'object_type = ?',
-                             @bnode.id,
-                             @bnode.class.to_s,
-                             @uri.id,
-                             @uri.class.to_s,
-                             @typed_literal.id,
-                             @typed_literal.class.to_s
-                            ]).should_not be_nil
+    it "should create PlainLiteral with language tag" do
+      @it.add(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      RubyRDF::ActiveRecord::PlainLiteral.count.should == 1
+      RubyRDF::ActiveRecord::PlainLiteral.find(:first,
+                                               :conditions => {
+                                                 :lexical_form => "test",
+                                                 :language_tag => "en"
+                                               }).should_not be_nil
+    end
 
-      RubyRDF::ActiveRecord::Statement.
-        find(:first,
-             :conditions => ['subject_id = ? and '+
-                             'subject_type = ? and ' +
-                             'predicate_id = ? and ' +
-                             'predicate_type = ? and ' +
-                             'object_id = ? and ' +
-                             'object_type = ?',
-                             @bnode.id,
-                             @bnode.class.to_s,
-                             @uri.id,
-                             @uri.class.to_s,
-                             @plain_literal.id,
-                             @plain_literal.class.to_s
-                            ]).should_not be_nil
+    it "should create TypedLiteral" do
+      @it.add(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::TypedLiteral.count.should == 1
+      RubyRDF::ActiveRecord::TypedLiteral.find(:first,
+                                               :conditions => {
+                                                 :lexical_form => "2",
+                                                 :datatype_uri => xsd::integer.uri
+                                               }).should_not be_nil
+    end
+
+    it "should create BNode" do
+      @it.add(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::BNode.count.should == 1
     end
   end
 
   describe "delete" do
-    it "should remove statements from graph" do
+    before do
       @it.add(:a, ex::pred, 2.to_literal)
-      @it.add(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+    end
+
+    it "should remove statement from graph" do
       @it.delete(:a, ex::pred, 2.to_literal)
-      @it.delete(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
       @it.size.should == 0
+    end
+
+    it "should destroy Statement" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::Statement.count.should == 0
+    end
+
+    it "should destroy URINode" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::URINode.count.should == 0
+    end
+
+    it "should destroy PlainLiteral" do
+      @it.add(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      @it.delete(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      RubyRDF::ActiveRecord::PlainLiteral.count.should == 0
+    end
+
+    it "should destroy TypedLiteral" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::TypedLiteral.count.should == 0
+    end
+
+    it "should destroy BNode" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::BNode.count.should == 0
+    end
+  end
+
+  describe "delete with statement in another graph" do
+    before do
+      @it.add(:a, ex::pred, 2.to_literal)
+      @another = RubyRDF::ActiveRecord.new
+      @another.add(:a, ex::pred, 2.to_literal)
+    end
+
+    it "should remove statement from graph" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      @it.size.should == 0
+    end
+
+    it "should not destroy Statement" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::Statement.count.should == 1
+      @another.include?(:a, ex::pred, 2.to_literal).should be_true
+    end
+  end
+
+  describe "delete with another statement" do
+    before do
+      @it.add(:a, ex::pred, 2.to_literal)
+      @it.add(:b, ex::pred, 2.to_literal)
+    end
+
+    it "should not destroy URINode" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::URINode.count.should == 1
+      RubyRDF::ActiveRecord::URINode.find_by_uri(ex::pred.uri).should_not be_nil
+    end
+
+    it "should not destroy PlainLiteral" do
+      @it.add(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      @it.add(:b, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      @it.delete(:a, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+      RubyRDF::ActiveRecord::PlainLiteral.count.should == 1
+      RubyRDF::ActiveRecord::PlainLiteral.find(:first,
+                                               :conditions => {
+                                                 :lexical_form => "test",
+                                                 :language_tag => "en"
+                                               }).should_not be_nil
+    end
+
+    it "should not destroy TypedLiteral" do
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::TypedLiteral.count.should == 1
+      RubyRDF::ActiveRecord::TypedLiteral.find(:first,
+                                               :conditions => {
+                                                 :lexical_form => "2",
+                                                 :datatype_uri => xsd::integer.uri
+                                               }).should_not be_nil
+    end
+
+    it "should not destroy BNode" do
+      @it.add(ex::sub, ex::pred, :a)
+      @it.delete(:a, ex::pred, 2.to_literal)
+      RubyRDF::ActiveRecord::BNode.count.should == 2
+    end
+  end
+
+  describe "match" do
+    before do
+      reset_db
+      @it = RubyRDF::ActiveRecord.new
+      @it.add(:a, ex::pred, 2.to_literal)
+      @it.add(:b, ex::pred, RubyRDF::PlainLiteral.new("test", "en"))
+    end
+
+    it "should match all statements" do
+      g = @it.match(nil, nil, nil)
+      g.size.should == 2
+      g.include?(:a, ex::pred, 2.to_literal).should be_true
+      g.include?(:b, ex::pred, RubyRDF::PlainLiteral.new("test", "en")).should be_true
+    end
+
+    it "should match statements" do
+      g = @it.match(nil, ex::pred, nil)
+      g.size.should == 2
+      g.include?(:a, ex::pred, 2.to_literal).should be_true
+      g.include?(:b, ex::pred, RubyRDF::PlainLiteral.new("test", "en")).should be_true
+    end
+
+    it "should match (not-bind) known BNode" do
+      g = @it.match(:a, nil, nil)
+      g.size.should == 1
+      g.include?(:a, ex::pred, 2.to_literal).should be_true
+    end
+
+    it "should not match invalid statement" do
+      g = @it.match(2.to_literal, nil, nil)
+      g.size.should == 0
     end
   end
 end

@@ -4,20 +4,9 @@ if defined?(ActiveRecord)
   module RubyRDF
     class ActiveRecord
       class URINode < ::ActiveRecord::Base
-        def self.find_or_create_by_rdf(uri_node, bnodes)
-          n = find_by_rdf(uri_node, bnodes)
-          unless n
-            n = create(:uri => uri_node.uri)
-          end
-          n
-        end
-
-        def self.find_by_rdf(uri_node, bnodes)
-          find(:first,
-               :conditions => {
-                 :uri => uri_node.uri
-               })
-        end
+        has_many :subject_statements, :as => :subject, :class_name => "RubyRDF::ActiveRecord::Statement"
+        has_many :predicate_statements, :as => :predicate, :class_name => "RubyRDF::ActiveRecord::Statement"
+        has_many :object_statements, :as => :object, :class_name => "RubyRDF::ActiveRecord::Statement"
 
         def to_rdf(bnodes)
           ::RubyRDF::URINode.new(uri)

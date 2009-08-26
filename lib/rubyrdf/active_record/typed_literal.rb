@@ -4,22 +4,9 @@ if defined?(ActiveRecord)
   module RubyRDF
     class ActiveRecord
       class TypedLiteral < ::ActiveRecord::Base
-        def self.find_or_create_by_rdf(typed_literal, bnodes)
-          n = find_by_rdf(typed_literal, bnodes)
-          unless n
-            n = create(:lexical_form => typed_literal.lexical_form,
-                       :datatype_uri => typed_literal.datatype_uri.uri)
-          end
-          n
-        end
-
-        def self.find_by_rdf(typed_literal, bnodes)
-          find(:first,
-               :conditions => {
-                 :lexical_form => typed_literal.lexical_form,
-                 :datatype_uri => typed_literal.datatype_uri.uri
-               })
-        end
+        has_many :subject_statements, :as => :subject, :class_name => "RubyRDF::ActiveRecord::Statement"
+        has_many :predicate_statements, :as => :predicate, :class_name => "RubyRDF::ActiveRecord::Statement"
+        has_many :object_statements, :as => :object, :class_name => "RubyRDF::ActiveRecord::Statement"
 
         def to_rdf(bnodes)
           ::RubyRDF::TypedLiteral.new(lexical_form, datatype_uri)

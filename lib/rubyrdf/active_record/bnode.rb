@@ -4,20 +4,9 @@ if defined?(ActiveRecord)
   module RubyRDF
     class ActiveRecord
       class BNode < ::ActiveRecord::Base
-        def self.find_or_create_by_rdf(bnode, bnodes)
-          unless bnodes[:to_ar][bnode]
-            b = create
-            bnodes[:to_ar][bnode] = b.id
-            bnodes[:from_ar][b.id] = bnode
-          end
-          find_by_id(bnodes[:to_ar][bnode])
-        end
-
-        def self.find_by_rdf(bnode, bnodes)
-          if bnodes[:to_ar][bnode]
-            find_by_id(bnodes[:to_ar][bnode])
-          end
-        end
+        has_many :subject_statements, :as => :subject, :class_name => "RubyRDF::ActiveRecord::Statement"
+        has_many :predicate_statements, :as => :predicate, :class_name => "RubyRDF::ActiveRecord::Statement"
+        has_many :object_statements, :as => :object, :class_name => "RubyRDF::ActiveRecord::Statement"
 
         def to_rdf(bnodes)
           unless bnodes[:from_ar][self.id]
