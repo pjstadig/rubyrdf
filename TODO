@@ -2,22 +2,12 @@
 - Turtle
 * Graph implementations
 - URI graph
-- Federated graph
-- ActiveRecord based graph
 * SPARQL query implementation
 * Move the Ruby query execution into the Query class
 * Reasoner and rules
-* to_f
-* to_i
-* to_int
-* to_s
-* to_str
-* to_date
-* to_time
-* to_ruby
 * New (streaming) HTTP library for Sesame graph
 * RDF/XML parse type literal parsing needs some help
 * Mock out the HTTP requests in the Sesame specs
 * Ruby 1.9 support
-* Reification
 * Do I need to include a call to super in subclasses of Graph?
+* Performance improvements on ActiveRecord graph
