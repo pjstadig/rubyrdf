@@ -3,6 +3,41 @@ if defined?(ActiveRecord)
 
   module RubyRDF
     class ActiveRecord < RubyRDF::Graph
+      def self.initialize_db
+        conn = Graph.connection
+        conn.create_table(:graphs){}
+
+        conn.create_table(:statements) do |t|
+          t.integer :subject_id, :predicate_id, :object_id
+          t.string :subject_type, :predicate_type, :object_type
+        end
+        conn.add_index(:statements, [:subject_id, :subject_type,
+                                     :predicate_id, :predicate_type,
+                                     :object_id, :object_type])
+
+        conn.create_table(:graphs_statements, :id => false) do |t|
+          t.integer :graph_id, :statement_id
+        end
+        conn.add_index(:graphs_statements, [:graph_id, :statement_id])
+
+        conn.create_table(:uri_nodes) do |t|
+          t.string :uri
+        end
+        conn.add_index(:uri_nodes, :uri)
+
+        conn.create_table(:plain_literals) do |t|
+          t.string :lexical_form, :language_tag
+        end
+        conn.add_index(:plain_literals, [:lexical_form, :language_tag])
+
+        conn.create_table(:typed_literals) do |t|
+          t.string :lexical_form, :datatype_uri
+        end
+        conn.add_index(:typed_literals, [:lexical_form, :datatype_uri])
+
+        conn.create_table(:b_nodes){}
+      end
+
       def initialize(id = nil)
         @graph = id ? Graph.find(id) : Graph.create
         @bnodes = {
